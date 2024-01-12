@@ -1,0 +1,9 @@
+[package]
+name = "boomerang"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+boomerang-client = { version = "0.0.1", path = "./client" }
+boomerang-engine = { version = "0.0.1", path = "./engine" }
+boomerang-harness = { version = "0.0.1", path = "./harness" }
