@@ -22,7 +22,7 @@ fn overwrite_slot_hashes_with_slots(client: &BoomerangClient, slots: &[Slot]) {
     client.set_sysvar(&slot_hashes);
 }
 
-pub async fn test_create_lookup_table_idempotent(client: BoomerangClient) {
+pub async fn test_create_lookup_table_idempotent(mut client: BoomerangClient) {
     let test_recent_slot = 123;
     overwrite_slot_hashes_with_slots(&client, &[test_recent_slot]);
 
@@ -36,7 +36,7 @@ pub async fn test_create_lookup_table_idempotent(client: BoomerangClient) {
     {
         let transaction = client.create_default_transaction(&[create_lookup_table_ix.clone()], &[]);
         client
-            .expect_successful_transaction(&transaction)
+            .expect_successful_transaction(transaction)
             .await
             .unwrap();
 
@@ -63,13 +63,13 @@ pub async fn test_create_lookup_table_idempotent(client: BoomerangClient) {
             .create_default_transaction_with_new_blockhash(&[create_lookup_table_ix], &[])
             .await;
         client
-            .expect_successful_transaction(&transaction)
+            .expect_successful_transaction(transaction)
             .await
             .unwrap();
     }
 }
 
-pub async fn test_create_lookup_table_not_idempotent(client: BoomerangClient) {
+pub async fn test_create_lookup_table_not_idempotent(mut client: BoomerangClient) {
     let test_recent_slot = 123;
     overwrite_slot_hashes_with_slots(&client, &[test_recent_slot]);
 
@@ -83,7 +83,7 @@ pub async fn test_create_lookup_table_not_idempotent(client: BoomerangClient) {
     let transaction =
         client.create_default_transaction(&[create_lookup_table_ix.clone()], &[&authority_keypair]);
     client
-        .expect_successful_transaction(&transaction)
+        .expect_successful_transaction(transaction)
         .await
         .unwrap();
 
@@ -97,7 +97,7 @@ pub async fn test_create_lookup_table_not_idempotent(client: BoomerangClient) {
             .await;
         client
             .expect_failed_transaction_instruction(
-                &transaction,
+                transaction,
                 0,
                 InstructionError::AccountAlreadyInitialized,
             )
@@ -105,7 +105,7 @@ pub async fn test_create_lookup_table_not_idempotent(client: BoomerangClient) {
     }
 }
 
-pub async fn test_create_lookup_table_use_payer_as_authority(client: BoomerangClient) {
+pub async fn test_create_lookup_table_use_payer_as_authority(mut client: BoomerangClient) {
     let test_recent_slot = 123;
     overwrite_slot_hashes_with_slots(&client, &[test_recent_slot]);
 
@@ -117,12 +117,12 @@ pub async fn test_create_lookup_table_use_payer_as_authority(client: BoomerangCl
 
     let transaction = client.create_default_transaction(&[create_lookup_table_ix.clone()], &[]);
     client
-        .expect_successful_transaction(&transaction)
+        .expect_successful_transaction(transaction)
         .await
         .unwrap();
 }
 
-pub async fn test_create_lookup_table_missing_signer(client: BoomerangClient) {
+pub async fn test_create_lookup_table_missing_signer(mut client: BoomerangClient) {
     let unsigned_authority_address = Pubkey::new_unique();
 
     let mut ix = create_lookup_table_signed(
@@ -133,35 +133,29 @@ pub async fn test_create_lookup_table_missing_signer(client: BoomerangClient) {
     .0;
     ix.accounts[1].is_signer = false;
 
+    let tx = client
+        .create_default_transaction_with_new_blockhash(&[ix], &[])
+        .await;
     client
-        .expect_failed_transaction_instruction(
-            &client
-                .create_default_transaction_with_new_blockhash(&[ix], &[])
-                .await,
-            0,
-            InstructionError::MissingRequiredSignature,
-        )
+        .expect_failed_transaction_instruction(tx, 0, InstructionError::MissingRequiredSignature)
         .await;
 }
 
-pub async fn test_create_lookup_table_not_recent_slot(client: BoomerangClient) {
+pub async fn test_create_lookup_table_not_recent_slot(mut client: BoomerangClient) {
     let payer = client.fee_payer();
     let authority_address = Pubkey::new_unique();
 
     let ix = create_lookup_table(authority_address, payer.pubkey(), Slot::MAX).0;
 
+    let tx = client
+        .create_default_transaction_with_new_blockhash(&[ix], &[])
+        .await;
     client
-        .expect_failed_transaction_instruction(
-            &client
-                .create_default_transaction_with_new_blockhash(&[ix], &[])
-                .await,
-            0,
-            InstructionError::InvalidInstructionData,
-        )
+        .expect_failed_transaction_instruction(tx, 0, InstructionError::InvalidInstructionData)
         .await;
 }
 
-pub async fn test_create_lookup_table_pda_mismatch(client: BoomerangClient) {
+pub async fn test_create_lookup_table_pda_mismatch(mut client: BoomerangClient) {
     let test_recent_slot = 123;
     overwrite_slot_hashes_with_slots(&client, &[test_recent_slot]);
 
@@ -171,13 +165,10 @@ pub async fn test_create_lookup_table_pda_mismatch(client: BoomerangClient) {
     let mut ix = create_lookup_table(authority_address, payer.pubkey(), test_recent_slot).0;
     ix.accounts[0].pubkey = Pubkey::new_unique();
 
+    let tx = client
+        .create_default_transaction_with_new_blockhash(&[ix], &[])
+        .await;
     client
-        .expect_failed_transaction_instruction(
-            &client
-                .create_default_transaction_with_new_blockhash(&[ix], &[])
-                .await,
-            0,
-            InstructionError::InvalidArgument,
-        )
+        .expect_failed_transaction_instruction(tx, 0, InstructionError::InvalidArgument)
         .await;
 }

@@ -6,7 +6,7 @@ use {
         hash::Hash,
         instruction::{Instruction, InstructionError},
         pubkey::Pubkey,
-        signature::{Keypair, Signature},
+        signature::Keypair,
         signer::Signer,
         sysvar::{Sysvar, SysvarId},
         transaction::{Transaction, TransactionError},
@@ -45,17 +45,17 @@ pub trait BoomerangTestClient {
     fn last_blockhash(&self) -> Hash;
 
     /// Get a new latest blockhash
-    async fn new_latest_blockhash(&self) -> Hash;
+    async fn new_latest_blockhash(&mut self) -> Hash;
 
     /// Process a transaction
     async fn process_transaction(
-        &self,
-        transaction: &Transaction,
-    ) -> Result<Signature, Option<TransactionError>>;
+        &mut self,
+        transaction: Transaction,
+    ) -> Result<(), Option<TransactionError>>;
 
     /// Get an account
     async fn get_account(
-        &self,
+        &mut self,
         pubkey: &Pubkey,
     ) -> Result<Option<Account>, Box<dyn std::error::Error>>;
 
@@ -94,7 +94,7 @@ pub trait BoomerangTestClient {
 
     /// Create a default transaction with a new latest blockhash
     async fn create_default_transaction_with_new_blockhash(
-        &self,
+        &mut self,
         instructions: &[Instruction],
         additional_signers: &[&Keypair],
     ) -> Transaction {
@@ -107,20 +107,17 @@ pub trait BoomerangTestClient {
 
     /// Helper to validate a transaction succeeded
     async fn expect_successful_transaction(
-        &self,
-        transaction: &Transaction,
-    ) -> Result<Signature, TransactionError> {
-        let result = self.process_transaction(transaction).await;
-        match result {
-            Ok(signature) => Ok(signature),
-            Err(err) => panic!("Transaction failed: {:#?}", err),
-        }
+        &mut self,
+        transaction: Transaction,
+    ) -> Result<(), Option<TransactionError>> {
+        self.process_transaction(transaction).await?;
+        Ok(())
     }
 
     /// Helper to validate a transaction failed with a specific error
     async fn expect_failed_transaction(
-        &self,
-        transaction: &Transaction,
+        &mut self,
+        transaction: Transaction,
         expected_err: TransactionError,
     ) {
         assert_eq!(
@@ -132,8 +129,8 @@ pub trait BoomerangTestClient {
     /// Helper to validate a transaction failed with a specific
     /// `InstructionError`
     async fn expect_failed_transaction_instruction(
-        &self,
-        transaction: &Transaction,
+        &mut self,
+        transaction: Transaction,
         index: u8,
         expected_err: InstructionError,
     ) {
@@ -153,7 +150,7 @@ pub trait BoomerangTestClient {
 
     /// Helper to validate an account's state matches the provided value
     async fn expect_account_state(
-        &self,
+        &mut self,
         pubkey: &Pubkey,
         expected_state: &Account,
     ) -> Result<(), Box<dyn std::error::Error>> {
@@ -167,7 +164,7 @@ pub trait BoomerangTestClient {
 
     /// Helper to validate an account's data matches the provided bytes
     async fn expect_account_data(
-        &self,
+        &mut self,
         pubkey: &Pubkey,
         expected_data: &[u8],
     ) -> Result<(), Box<dyn std::error::Error>> {

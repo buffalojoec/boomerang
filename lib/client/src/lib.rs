@@ -11,7 +11,7 @@ use {
         account::Account,
         hash::Hash,
         pubkey::Pubkey,
-        signature::{Keypair, Signature},
+        signature::Keypair,
         sysvar::{Sysvar, SysvarId},
         transaction::{Transaction, TransactionError},
     },
@@ -52,7 +52,7 @@ impl BoomerangTestClient for BoomerangClient {
         }
     }
 
-    async fn new_latest_blockhash(&self) -> Hash {
+    async fn new_latest_blockhash(&mut self) -> Hash {
         if self.use_banks {
             self.banks.new_latest_blockhash().await
         } else {
@@ -61,9 +61,9 @@ impl BoomerangTestClient for BoomerangClient {
     }
 
     async fn process_transaction(
-        &self,
-        transaction: &Transaction,
-    ) -> Result<Signature, Option<TransactionError>> {
+        &mut self,
+        transaction: Transaction,
+    ) -> Result<(), Option<TransactionError>> {
         if self.use_banks {
             self.banks.process_transaction(transaction).await
         } else {
@@ -72,7 +72,7 @@ impl BoomerangTestClient for BoomerangClient {
     }
 
     async fn get_account(
-        &self,
+        &mut self,
         pubkey: &Pubkey,
     ) -> Result<Option<Account>, Box<dyn std::error::Error>> {
         if self.use_banks {

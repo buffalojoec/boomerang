@@ -6,7 +6,7 @@ use {
         account::Account,
         hash::Hash,
         pubkey::Pubkey,
-        signature::{Keypair, Signature},
+        signature::Keypair,
         sysvar::{Sysvar, SysvarId},
         transaction::{Transaction, TransactionError},
     },
@@ -40,22 +40,23 @@ impl BoomerangTestClient for BoomerangRpcClient {
         self.latest_blockhash
     }
 
-    async fn new_latest_blockhash(&self) -> Hash {
+    async fn new_latest_blockhash(&mut self) -> Hash {
         self.rpc_client.get_latest_blockhash().await.unwrap()
     }
 
     async fn process_transaction(
-        &self,
-        transaction: &Transaction,
-    ) -> Result<Signature, Option<TransactionError>> {
+        &mut self,
+        transaction: Transaction,
+    ) -> Result<(), Option<TransactionError>> {
         self.rpc_client
-            .send_and_confirm_transaction(transaction)
+            .send_and_confirm_transaction(&transaction)
             .await
+            .map(|_| ())
             .map_err(|err| err.get_transaction_error())
     }
 
     async fn get_account(
-        &self,
+        &mut self,
         pubkey: &Pubkey,
     ) -> Result<Option<Account>, Box<dyn std::error::Error>> {
         self.rpc_client
