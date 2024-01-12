@@ -36,7 +36,7 @@ impl Default for BoomerangTestClientConfig {
 #[async_trait]
 pub trait BoomerangTestClient {
     /// Create a new client
-    async fn new(config: &BoomerangTestClientConfig) -> Self;
+    async fn setup(config: &BoomerangTestClientConfig) -> Self;
 
     /// Get the fee payer
     fn fee_payer(&self) -> Keypair;

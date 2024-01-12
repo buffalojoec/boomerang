@@ -20,7 +20,7 @@ pub struct BoomerangBanksClient {
 
 #[async_trait]
 impl BoomerangTestClient for BoomerangBanksClient {
-    async fn new(config: &BoomerangTestClientConfig) -> Self {
+    async fn setup(config: &BoomerangTestClientConfig) -> Self {
         let mut program_test = ProgramTest::new(&config.program_file, config.program_id, None);
         config.features_disabled.iter().for_each(|feature| {
             program_test.deactivate_feature(*feature);

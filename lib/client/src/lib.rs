@@ -18,45 +18,62 @@ use {
 };
 
 pub struct BoomerangClient {
-    pub banks: BoomerangBanksClient,
-    pub rpc: BoomerangRpcClient,
+    // I don't love this, btw.
+    pub banks: Option<BoomerangBanksClient>,
+    pub rpc: Option<BoomerangRpcClient>,
     pub use_banks: bool,
+}
+impl BoomerangClient {
+    pub async fn new(config: BoomerangTestClientConfig, use_banks: bool) -> Self {
+        let (banks, rpc) = if use_banks {
+            let banks = BoomerangBanksClient::setup(&config).await;
+            (Some(banks), None)
+        } else {
+            let rpc = BoomerangRpcClient::setup(&config).await;
+            (None, Some(rpc))
+        };
+        Self {
+            banks,
+            rpc,
+            use_banks,
+        }
+    }
 }
 
 #[async_trait]
 impl BoomerangTestClient for BoomerangClient {
-    // TODO: No-op?
-    async fn new(config: &BoomerangTestClientConfig) -> Self {
-        let banks = BoomerangBanksClient::new(config).await;
-        let rpc = BoomerangRpcClient::new(config).await;
+    // This function is a no-op, for now.
+    // The config parameters for each need to be split out.
+    async fn setup(_config: &BoomerangTestClientConfig) -> Self {
         BoomerangClient {
-            banks,
-            rpc,
+            banks: None,
+            rpc: None,
             use_banks: true,
         }
     }
 
     fn fee_payer(&self) -> Keypair {
         if self.use_banks {
-            self.banks.fee_payer()
+            // Ahh (!!)
+            self.banks.as_ref().unwrap().fee_payer()
         } else {
-            self.rpc.fee_payer()
+            self.rpc.as_ref().unwrap().fee_payer()
         }
     }
 
     fn last_blockhash(&self) -> Hash {
         if self.use_banks {
-            self.banks.last_blockhash()
+            self.banks.as_ref().unwrap().last_blockhash()
         } else {
-            self.rpc.last_blockhash()
+            self.rpc.as_ref().unwrap().last_blockhash()
         }
     }
 
     async fn new_latest_blockhash(&mut self) -> Hash {
         if self.use_banks {
-            self.banks.new_latest_blockhash().await
+            self.banks.as_mut().unwrap().new_latest_blockhash().await
         } else {
-            self.rpc.new_latest_blockhash().await
+            self.rpc.as_mut().unwrap().new_latest_blockhash().await
         }
     }
 
@@ -65,9 +82,17 @@ impl BoomerangTestClient for BoomerangClient {
         transaction: Transaction,
     ) -> Result<(), Option<TransactionError>> {
         if self.use_banks {
-            self.banks.process_transaction(transaction).await
+            self.banks
+                .as_mut()
+                .unwrap()
+                .process_transaction(transaction)
+                .await
         } else {
-            self.rpc.process_transaction(transaction).await
+            self.rpc
+                .as_mut()
+                .unwrap()
+                .process_transaction(transaction)
+                .await
         }
     }
 
@@ -76,17 +101,17 @@ impl BoomerangTestClient for BoomerangClient {
         pubkey: &Pubkey,
     ) -> Result<Option<Account>, Box<dyn std::error::Error>> {
         if self.use_banks {
-            self.banks.get_account(pubkey).await
+            self.banks.as_mut().unwrap().get_account(pubkey).await
         } else {
-            self.rpc.get_account(pubkey).await
+            self.rpc.as_mut().unwrap().get_account(pubkey).await
         }
     }
 
     fn set_sysvar<T: SysvarId + Sysvar>(&self, sysvar: &T) {
         if self.use_banks {
-            self.banks.set_sysvar(sysvar)
+            self.banks.as_ref().unwrap().set_sysvar(sysvar)
         } else {
-            self.rpc.set_sysvar(sysvar)
+            self.rpc.as_ref().unwrap().set_sysvar(sysvar)
         }
     }
 }

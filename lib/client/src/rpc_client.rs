@@ -20,7 +20,7 @@ pub struct BoomerangRpcClient {
 
 #[async_trait]
 impl BoomerangTestClient for BoomerangRpcClient {
-    async fn new(config: &BoomerangTestClientConfig) -> Self {
+    async fn setup(config: &BoomerangTestClientConfig) -> Self {
         let fee_payer = Keypair::new();
         let rpc_client =
             RpcClient::new_with_commitment(config.rpc_endpoint.clone(), config.rpc_commitment);

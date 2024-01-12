@@ -23,7 +23,7 @@ macro_rules! async_trial {
                 .build()
                 .unwrap()
                 .block_on(async {
-                    let client = BoomerangClient::new(&config).await;
+                    let client = BoomerangClient::setup(&config).await;
                     $test_func(client).await
                 });
             Ok(())
