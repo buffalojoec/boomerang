@@ -8,7 +8,7 @@ use {
     banks_client::BoomerangBanksClient,
     rpc_client::BoomerangRpcClient,
     solana_sdk::{
-        account::AccountSharedData,
+        account::Account,
         hash::Hash,
         pubkey::Pubkey,
         signature::{Keypair, Signature},
@@ -62,8 +62,8 @@ impl BoomerangTestClient for BoomerangClient {
 
     async fn process_transaction(
         &self,
-        transaction: Transaction,
-    ) -> Result<Signature, TransactionError> {
+        transaction: &Transaction,
+    ) -> Result<Signature, Option<TransactionError>> {
         if self.use_banks {
             self.banks.process_transaction(transaction).await
         } else {
@@ -74,7 +74,7 @@ impl BoomerangTestClient for BoomerangClient {
     async fn get_account(
         &self,
         pubkey: &Pubkey,
-    ) -> Result<AccountSharedData, Box<dyn std::error::Error>> {
+    ) -> Result<Option<Account>, Box<dyn std::error::Error>> {
         if self.use_banks {
             self.banks.get_account(pubkey).await
         } else {

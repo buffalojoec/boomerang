@@ -1,7 +1,8 @@
 use {
     async_trait::async_trait,
     solana_sdk::{
-        account::{AccountSharedData, ReadableAccount},
+        account::{Account, ReadableAccount},
+        commitment_config::CommitmentConfig,
         hash::Hash,
         instruction::{Instruction, InstructionError},
         pubkey::Pubkey,
@@ -16,6 +17,19 @@ pub struct BoomerangTestClientConfig {
     pub features_disabled: Vec<Pubkey>,
     pub program_file: String,
     pub program_id: Pubkey,
+    pub rpc_commitment: CommitmentConfig,
+    pub rpc_endpoint: String,
+}
+impl Default for BoomerangTestClientConfig {
+    fn default() -> Self {
+        Self {
+            features_disabled: vec![],
+            program_file: "program.so".to_string(),
+            program_id: Pubkey::new_unique(),
+            rpc_commitment: CommitmentConfig::confirmed(),
+            rpc_endpoint: "http://127.0.0.1:8899".to_string(),
+        }
+    }
 }
 
 /// A client for testing programs
@@ -36,14 +50,14 @@ pub trait BoomerangTestClient {
     /// Process a transaction
     async fn process_transaction(
         &self,
-        transaction: Transaction,
-    ) -> Result<Signature, TransactionError>;
+        transaction: &Transaction,
+    ) -> Result<Signature, Option<TransactionError>>;
 
     /// Get an account
     async fn get_account(
         &self,
         pubkey: &Pubkey,
-    ) -> Result<AccountSharedData, Box<dyn std::error::Error>>;
+    ) -> Result<Option<Account>, Box<dyn std::error::Error>>;
 
     /// Set a sysvar
     fn set_sysvar<T: SysvarId + Sysvar>(&self, sysvar: &T);
@@ -94,51 +108,61 @@ pub trait BoomerangTestClient {
     /// Helper to validate a transaction succeeded
     async fn expect_successful_transaction(
         &self,
-        transaction: Transaction,
+        transaction: &Transaction,
     ) -> Result<Signature, TransactionError> {
         let result = self.process_transaction(transaction).await;
-        if let Ok(signature) = result {
-            Ok(signature)
-        } else {
-            panic!("Transaction failed: {}", result.unwrap_err());
+        match result {
+            Ok(signature) => Ok(signature),
+            Err(err) => panic!("Transaction failed: {:#?}", err),
         }
     }
 
     /// Helper to validate a transaction failed with a specific error
     async fn expect_failed_transaction(
         &self,
-        transaction: Transaction,
+        transaction: &Transaction,
         expected_err: TransactionError,
     ) {
         assert_eq!(
             self.process_transaction(transaction).await.unwrap_err(),
-            expected_err,
+            Some(expected_err),
         );
     }
 
     /// Helper to validate a transaction failed with a specific
     /// `InstructionError`
-    async fn expect_failed_instruction(
+    async fn expect_failed_transaction_instruction(
         &self,
-        transaction: Transaction,
+        transaction: &Transaction,
         index: u8,
         expected_err: InstructionError,
     ) {
-        assert_eq!(
-            self.process_transaction(transaction).await.unwrap_err(),
-            TransactionError::InstructionError(index, expected_err),
-        );
+        let result = self.process_transaction(transaction).await;
+        match result {
+            Ok(signature) => panic!("Transaction succeeded: {:#?}", signature),
+            Err(err) => {
+                if let Some(TransactionError::InstructionError(i, err)) = err {
+                    assert_eq!(i, index);
+                    assert_eq!(err, expected_err);
+                } else {
+                    panic!("Transaction failed with unknown error: {:#?}", err);
+                }
+            }
+        }
     }
 
     /// Helper to validate an account's state matches the provided value
     async fn expect_account_state(
         &self,
         pubkey: &Pubkey,
-        expected_state: &AccountSharedData,
+        expected_state: &Account,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let account = self.get_account(pubkey).await?;
-        assert_eq!(account, *expected_state);
-        Ok(())
+        if let Some(account) = self.get_account(pubkey).await? {
+            assert_eq!(account, *expected_state);
+            Ok(())
+        } else {
+            panic!("Account not found: {}", pubkey);
+        }
     }
 
     /// Helper to validate an account's data matches the provided bytes
@@ -147,8 +171,11 @@ pub trait BoomerangTestClient {
         pubkey: &Pubkey,
         expected_data: &[u8],
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let account = self.get_account(pubkey).await?;
-        assert_eq!(account.data(), expected_data);
-        Ok(())
+        if let Some(account) = self.get_account(pubkey).await? {
+            assert_eq!(account.data(), expected_data);
+            Ok(())
+        } else {
+            panic!("Account not found: {}", pubkey);
+        }
     }
 }

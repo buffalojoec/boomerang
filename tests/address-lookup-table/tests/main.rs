@@ -39,6 +39,7 @@ fn tests() -> Vec<Trial> {
                 features_disabled: vec![],
                 program_file: program_file.to_string(),
                 program_id: address_lookup_table::program::id(),
+                ..BoomerangTestClientConfig::default()
             });
 
             let config_feature_disabled = Arc::new(BoomerangTestClientConfig {
@@ -47,6 +48,7 @@ fn tests() -> Vec<Trial> {
                 ],
                 program_file: program_file.to_string(),
                 program_id: address_lookup_table::program::id(),
+                ..BoomerangTestClientConfig::default()
             });
 
             vec![

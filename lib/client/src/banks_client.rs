@@ -2,7 +2,7 @@ use {
     crate::interface::{BoomerangTestClient, BoomerangTestClientConfig},
     async_trait::async_trait,
     solana_sdk::{
-        account::AccountSharedData,
+        account::Account,
         hash::Hash,
         pubkey::Pubkey,
         signature::{Keypair, Signature},
@@ -33,15 +33,15 @@ impl BoomerangTestClient for BoomerangBanksClient {
 
     async fn process_transaction(
         &self,
-        _transaction: Transaction,
-    ) -> Result<Signature, TransactionError> {
+        _transaction: &Transaction,
+    ) -> Result<Signature, Option<TransactionError>> {
         unimplemented!()
     }
 
     async fn get_account(
         &self,
         _pubkey: &Pubkey,
-    ) -> Result<AccountSharedData, Box<dyn std::error::Error>> {
+    ) -> Result<Option<Account>, Box<dyn std::error::Error>> {
         unimplemented!()
     }
 
