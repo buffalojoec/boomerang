@@ -553,8 +553,6 @@ name = "boomerang"
 version = "0.0.1"
 dependencies = [
  "boomerang-client",
- "boomerang-engine",
- "boomerang-harness",
 ]
 
 [[package]]
@@ -574,14 +572,6 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
 ]
-
-[[package]]
-name = "boomerang-engine"
-version = "0.0.1"
-
-[[package]]
-name = "boomerang-harness"
-version = "0.0.1"
 
 [[package]]
 name = "borsh"
