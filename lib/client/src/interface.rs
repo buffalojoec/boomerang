@@ -40,6 +40,9 @@ pub trait BoomerangTestClient {
     /// Create a new client
     async fn setup(config: &BoomerangTestClientConfig) -> Self;
 
+    /// Get the program ID
+    fn program_id(&self) -> Pubkey;
+
     /// Get the fee payer
     fn fee_payer(&self) -> Keypair;
 

@@ -51,6 +51,14 @@ impl BoomerangTestClient for BoomerangClient {
         }
     }
 
+    fn program_id(&self) -> Pubkey {
+        if self.use_banks {
+            self.banks.as_ref().unwrap().program_id()
+        } else {
+            self.rpc.as_ref().unwrap().program_id()
+        }
+    }
+
     fn fee_payer(&self) -> Keypair {
         if self.use_banks {
             // Ahh (!!)

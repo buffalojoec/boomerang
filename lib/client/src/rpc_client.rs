@@ -16,6 +16,7 @@ use {
 pub struct BoomerangRpcClient {
     fee_payer: Keypair,
     latest_blockhash: Hash,
+    program_id: Pubkey,
     rpc_client: RpcClient,
 }
 
@@ -23,6 +24,8 @@ pub struct BoomerangRpcClient {
 impl BoomerangTestClient for BoomerangRpcClient {
     async fn setup(config: &BoomerangTestClientConfig) -> Self {
         let fee_payer = Keypair::new();
+        let program_id = config.program_id;
+
         let rpc_client =
             RpcClient::new_with_commitment(config.rpc_endpoint.clone(), config.rpc_commitment);
         let latest_blockhash = rpc_client.get_latest_blockhash().await.unwrap();
@@ -38,8 +41,13 @@ impl BoomerangTestClient for BoomerangRpcClient {
         Self {
             fee_payer,
             latest_blockhash,
+            program_id,
             rpc_client,
         }
+    }
+
+    fn program_id(&self) -> Pubkey {
+        self.program_id
     }
 
     fn fee_payer(&self) -> Keypair {

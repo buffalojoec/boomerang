@@ -6,11 +6,12 @@ use {
     solana_boomerang::client::{BoomerangClient, BoomerangTestClientConfig},
     solana_program::address_lookup_table,
     solana_sdk::{feature_set, pubkey::Pubkey},
+    std::str::FromStr,
 };
 
 const PROGRAM_IMPLEMENTATIONS: &[&str] = &[
     "solana_address_lookup_table_program",
-    "solana_address_lookup_table_program",
+    // "solana_address_lookup_table_program",
     // More program implementations...
 ];
 
@@ -158,8 +159,16 @@ fn test_6(program_file: String, program_id: Pubkey, use_banks: bool) -> Trial {
 async fn main() {
     let program_files = PROGRAM_IMPLEMENTATIONS;
     let program_id = address_lookup_table::program::id();
+    let integration_test_program_id =
+        Pubkey::from_str("927eaPZzYLFfox14h7UyaZjGk6yL7RSWjtmFv8dhBUki").unwrap();
 
     let tests = vec![test_1, test_2, test_3, test_4, test_5, test_6];
 
-    solana_boomerang::entrypoint(program_files, &program_id, &tests).await;
+    solana_boomerang::entrypoint(
+        program_files,
+        &program_id,
+        &integration_test_program_id,
+        &tests,
+    )
+    .await;
 }

@@ -16,8 +16,12 @@ fn parse_env(variable: &str) -> bool {
     std::env::var(variable).unwrap_or_default() == "true"
 }
 
-pub async fn entrypoint<P>(program_files: &[&str], program_id: &Pubkey, tests: &[P])
-where
+pub async fn entrypoint<P>(
+    program_files: &[&str],
+    program_id: &Pubkey,
+    integration_test_program_id: &Pubkey,
+    tests: &[P],
+) where
     P: Fn(String, Pubkey, bool) -> Trial,
 {
     let integration = parse_env("INTEGRATION");
@@ -37,7 +41,8 @@ where
 
     if integration {
         // Run the integration tests
-        let integration_test = BoomerangIntegrationTest::new(program_files, program_id, tests);
+        let integration_test =
+            BoomerangIntegrationTest::new(program_files, integration_test_program_id, tests);
         integration_test.run();
     }
 

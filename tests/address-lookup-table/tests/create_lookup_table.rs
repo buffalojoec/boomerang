@@ -20,8 +20,11 @@ pub async fn test_create_lookup_table_idempotent(mut client: BoomerangClient) {
     let authority_address = Pubkey::new_unique();
     let payer_pubkey = client.fee_payer().pubkey();
 
-    let (create_lookup_table_ix, lookup_table_address) =
+    let (mut create_lookup_table_ix, lookup_table_address) =
         create_lookup_table(authority_address, payer_pubkey, TEST_RECENT_SLOT);
+
+    // TODO: How to get this out?
+    create_lookup_table_ix.program_id = client.program_id();
 
     // First create should succeed
     {
@@ -65,8 +68,11 @@ pub async fn test_create_lookup_table_not_idempotent(mut client: BoomerangClient
     let authority_keypair = Keypair::new();
     let authority_address = authority_keypair.pubkey();
 
-    let (create_lookup_table_ix, ..) =
+    let (mut create_lookup_table_ix, ..) =
         create_lookup_table_signed(authority_address, payer_pubkey, TEST_RECENT_SLOT);
+
+    // TODO: How to get this out?
+    create_lookup_table_ix.program_id = client.program_id();
 
     let transaction =
         client.create_default_transaction(&[create_lookup_table_ix.clone()], &[&authority_keypair]);
@@ -97,8 +103,11 @@ pub async fn test_create_lookup_table_use_payer_as_authority(mut client: Boomera
     let payer_pubkey = client.fee_payer().pubkey();
     let authority_address = payer_pubkey;
 
-    let (create_lookup_table_ix, ..) =
+    let (mut create_lookup_table_ix, ..) =
         create_lookup_table_signed(authority_address, payer_pubkey, TEST_RECENT_SLOT);
+
+    // TODO: How to get this out?
+    create_lookup_table_ix.program_id = client.program_id();
 
     let transaction = client.create_default_transaction(&[create_lookup_table_ix.clone()], &[]);
     client
@@ -118,6 +127,9 @@ pub async fn test_create_lookup_table_missing_signer(mut client: BoomerangClient
     .0;
     ix.accounts[1].is_signer = false;
 
+    // TODO: How to get this out?
+    ix.program_id = client.program_id();
+
     let tx = client
         .create_default_transaction_with_new_blockhash(&[ix], &[])
         .await;
@@ -130,7 +142,10 @@ pub async fn test_create_lookup_table_not_recent_slot(mut client: BoomerangClien
     let payer = client.fee_payer();
     let authority_address = Pubkey::new_unique();
 
-    let ix = create_lookup_table(authority_address, payer.pubkey(), Slot::MAX).0;
+    let mut ix = create_lookup_table(authority_address, payer.pubkey(), Slot::MAX).0;
+
+    // TODO: How to get this out?
+    ix.program_id = client.program_id();
 
     let tx = client
         .create_default_transaction_with_new_blockhash(&[ix], &[])
@@ -146,6 +161,9 @@ pub async fn test_create_lookup_table_pda_mismatch(mut client: BoomerangClient) 
 
     let mut ix = create_lookup_table(authority_address, payer.pubkey(), TEST_RECENT_SLOT).0;
     ix.accounts[0].pubkey = Pubkey::new_unique();
+
+    // TODO: How to get this out?
+    ix.program_id = client.program_id();
 
     let tx = client
         .create_default_transaction_with_new_blockhash(&[ix], &[])

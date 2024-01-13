@@ -22,21 +22,31 @@ fn overwrite_slot_hashes_with_slots(context: &ProgramTestContext, slots: &[Slot]
 }
 
 pub struct BoomerangBanksClient {
+    program_id: Pubkey,
     program_test_context: ProgramTestContext,
 }
 
 #[async_trait]
 impl BoomerangTestClient for BoomerangBanksClient {
     async fn setup(config: &BoomerangTestClientConfig) -> Self {
+        let program_id = config.program_id;
+
         let mut program_test = ProgramTest::new(&config.program_file, config.program_id, None);
         config.features_disabled.iter().for_each(|feature| {
             program_test.deactivate_feature(*feature);
         });
+
         let program_test_context = program_test.start_with_context().await;
         overwrite_slot_hashes_with_slots(&program_test_context, &config.advance_slot_hashes);
+
         Self {
+            program_id,
             program_test_context,
         }
+    }
+
+    fn program_id(&self) -> Pubkey {
+        self.program_id
     }
 
     fn fee_payer(&self) -> Keypair {

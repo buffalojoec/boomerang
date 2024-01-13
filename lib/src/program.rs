@@ -15,6 +15,42 @@ impl BoomerangProgramTestIteration {
     }
 }
 
+pub fn map_iteration<P>(
+    program_file: &str,
+    program_id: &Pubkey,
+    tests: &[P],
+    use_banks: bool,
+) -> BoomerangProgramTestIteration
+where
+    P: Fn(String, Pubkey, bool) -> Trial,
+{
+    let program_file = program_file.to_string();
+    let trials = tests
+        .iter()
+        .map(|test| test(program_file.clone(), *program_id, use_banks))
+        .collect();
+    BoomerangProgramTestIteration {
+        args: Arguments::from_args(),
+        program_file,
+        trials,
+    }
+}
+
+pub fn build_iterations<P>(
+    program_files: &[&str],
+    program_id: &Pubkey,
+    tests: &[P],
+    use_banks: bool,
+) -> Vec<BoomerangProgramTestIteration>
+where
+    P: Fn(String, Pubkey, bool) -> Trial,
+{
+    program_files
+        .iter()
+        .map(|program_file| map_iteration(program_file, program_id, tests, use_banks))
+        .collect()
+}
+
 pub struct BoomerangProgramTest {
     iterations: Vec<BoomerangProgramTestIteration>,
 }
@@ -23,23 +59,7 @@ impl BoomerangProgramTest {
     where
         P: Fn(String, Pubkey, bool) -> Trial,
     {
-        let args = libtest_mimic::Arguments::from_args();
-
-        let iterations = program_files
-            .iter()
-            .map(|program_file| {
-                let program_file = program_file.to_string();
-                let trials = tests
-                    .iter()
-                    .map(|test| test(program_file.clone(), *program_id, use_banks))
-                    .collect();
-                BoomerangProgramTestIteration {
-                    args: args.clone(),
-                    program_file,
-                    trials,
-                }
-            })
-            .collect();
+        let iterations = build_iterations(program_files, program_id, tests, use_banks);
 
         Self { iterations }
     }
@@ -65,7 +85,7 @@ impl BoomerangProgramTest {
         }
     }
 
-    pub fn get_iterations(self) -> Vec<BoomerangProgramTestIteration> {
+    pub fn iterations(self) -> Vec<BoomerangProgramTestIteration> {
         self.iterations
     }
 }

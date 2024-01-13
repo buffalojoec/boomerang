@@ -11,14 +11,16 @@ pub fn workspace_root() -> Result<PathBuf, Box<dyn std::error::Error>> {
         .map_err(|err| err.into())
 }
 
-pub fn _read_pubkey_from_keypair_path(path: &str) -> Result<Pubkey, Box<dyn std::error::Error>> {
+pub fn _read_pubkey_from_keypair_path(
+    path: &PathBuf,
+) -> Result<Pubkey, Box<dyn std::error::Error>> {
     let file_contents = std::fs::read_to_string(path)?;
     let bytes: Vec<u8> = serde_json::from_str(&file_contents)?;
     let keypair = Keypair::from_bytes(&bytes)?;
     Ok(keypair.pubkey())
 }
 
-pub fn write_keypair_to_path(
+pub fn _write_keypair_to_path(
     keypair: &Keypair,
     path: &PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
