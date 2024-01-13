@@ -4,23 +4,29 @@
 //! Perhaps you include the modules above this comment, and then you have a
 //! macro attribute that looks something like this:
 //!
-//! #[boomerang(
+//! #[boomerang::main(
 //!     programs = [
 //!         (
 //!             "solana_address_lookup_table_program",
 //!             "927eaPZzYLFfox14h7UyaZjGk6yL7RSWjtmFv8dhBUki"
 //!         ),
 //!         (
-//!             "solana_address_lookup_table_program_zig",
+//!             "solana_address_lookup_table_zig",
 //!             "927eaPZzYLFfox14h7UyaZjGk6yL7RSWjtmFv8dhBUki"
 //!         ),
 //!     ],
 //!     program_tests = true,
 //!     integration_tests = true,
-//!     migration_tests(
-//!         source_program = "solana_address_lookup_table_program",
-//!         target_program = NativeProgram::AddressLookupTable,
-//!     ),
+//!     migration_tests = [
+//!         (
+//!             "solana_address_lookup_table_program",
+//!             NativeProgram::AddressLookupTable
+//!         ),
+//!         (
+//!             "solana_address_lookup_table_zig",
+//!             NativeProgram::AddressLookupTable
+//!         ),
+//!     ]
 //! )]
 //! async fn main() {}
 //!

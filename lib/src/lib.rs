@@ -8,11 +8,8 @@ use {
     program::BoomerangProgramTest, solana_sdk::pubkey::Pubkey,
 };
 pub use {
-    libtest_mimic,
-    solana_boomerang_client as client,
-    // solana_boomerang_macros as boomerang,
-    solana_boomerang_test_validator as test_validator,
-    tokio,
+    libtest_mimic, solana_boomerang_client as client, solana_boomerang_macros as boomerang,
+    solana_boomerang_test_validator as test_validator, tokio,
 };
 
 fn parse_env(variable: &str) -> bool {
