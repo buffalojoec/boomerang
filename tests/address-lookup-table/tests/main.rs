@@ -79,9 +79,9 @@ async fn main() {
         ..BoomerangTestClientConfig::default()
     };
     let config_advance_slot_hashes = BoomerangTestClientConfig {
-        advance_slot_hashes: vec![TEST_RECENT_SLOT],
         program_file: program_file.clone(),
         program_id,
+        warp_slot: TEST_RECENT_SLOT,
         ..BoomerangTestClientConfig::default()
     };
     let config_disable_feature = BoomerangTestClientConfig {
@@ -93,12 +93,12 @@ async fn main() {
         ..BoomerangTestClientConfig::default()
     };
     let config_advance_slot_hashes_and_disable_feature = BoomerangTestClientConfig {
-        advance_slot_hashes: vec![TEST_RECENT_SLOT],
         features_disabled: vec![
             feature_set::relax_authority_signer_check_for_lookup_table_creation::id(),
         ],
         program_file,
         program_id,
+        warp_slot: TEST_RECENT_SLOT,
         ..BoomerangTestClientConfig::default()
     };
 

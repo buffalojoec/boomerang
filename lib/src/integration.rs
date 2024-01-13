@@ -2,6 +2,7 @@ use {
     crate::{
         dirs,
         program::{map_iteration, BoomerangProgramTestIteration},
+        validator_options::IntoTestValidatorStartOptions,
     },
     libtest_mimic::Trial,
     solana_boomerang_client::BoomerangTestClientConfig,
@@ -68,23 +69,32 @@ impl BoomerangIntegrationTest {
     pub fn run(self) {
         let ledger_path = get_ledger_path();
         for iteration in self.iterations {
-            println!("Running integrations tests for {}", iteration.program_file);
-
-            // Start the test validator
-            let test_validator = BoomerangTestValidator::new(
-                ledger_path.clone(),
-                "solana".to_string(),
-                "solana-test-validator".to_string(),
-                &self.test_validator_start_options,
+            println!(
+                "Running integrations tests for {}",
+                iteration.program_file()
             );
-            test_validator.solana_test_validator_teardown();
-            test_validator.solana_test_validator_start();
 
-            // Run the tests
-            iteration.run();
+            for chunk in iteration.chunks() {
+                // Start the test validator
+                let test_validator = BoomerangTestValidator::new(
+                    ledger_path.clone(),
+                    "solana".to_string(),
+                    "solana-test-validator".to_string(),
+                    &[
+                        &self.test_validator_start_options,
+                        // Build out any additional startup options
+                        &chunk.config().to_test_validator_start_options(),
+                    ],
+                );
+                test_validator.solana_test_validator_teardown();
+                test_validator.solana_test_validator_start();
 
-            // Tear down the test validator
-            test_validator.solana_test_validator_teardown();
+                // Run the tests
+                chunk.run();
+
+                // Tear down the test validator
+                test_validator.solana_test_validator_teardown();
+            }
         }
     }
 }

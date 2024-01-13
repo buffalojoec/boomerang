@@ -15,22 +15,22 @@ use {
 
 #[derive(Clone)]
 pub struct BoomerangTestClientConfig {
-    pub advance_slot_hashes: Vec<Slot>,
     pub features_disabled: Vec<Pubkey>,
     pub program_file: String,
     pub program_id: Pubkey,
     pub rpc_commitment: CommitmentConfig,
     pub rpc_endpoint: String,
+    pub warp_slot: Slot,
 }
 impl Default for BoomerangTestClientConfig {
     fn default() -> Self {
         Self {
-            advance_slot_hashes: vec![],
             features_disabled: vec![],
             program_file: "program.so".to_string(),
             program_id: Pubkey::new_unique(),
             rpc_commitment: CommitmentConfig::processed(),
             rpc_endpoint: "http://127.0.0.1:8899".to_string(),
+            warp_slot: 0,
         }
     }
 }

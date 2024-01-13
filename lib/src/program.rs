@@ -3,15 +3,38 @@ use {
     solana_boomerang_client::BoomerangTestClientConfig,
 };
 
+pub struct BoomerangProgramTestChunk {
+    args: Arguments,
+    config: BoomerangTestClientConfig,
+    trials: Vec<Trial>,
+}
+impl BoomerangProgramTestChunk {
+    pub fn config(&self) -> &BoomerangTestClientConfig {
+        &self.config
+    }
+
+    pub fn run(self) {
+        libtest_mimic::run(&self.args, self.trials).exit_if_failed();
+    }
+}
+
 pub struct BoomerangProgramTestIteration {
-    pub args: Arguments,
-    pub program_file: String,
-    pub trials: Vec<Trial>,
+    chunks: Vec<BoomerangProgramTestChunk>,
+    program_file: String,
 }
 impl BoomerangProgramTestIteration {
+    pub fn chunks(self) -> Vec<BoomerangProgramTestChunk> {
+        self.chunks
+    }
+
+    pub fn program_file(&self) -> &str {
+        &self.program_file
+    }
+
     pub fn run(self) {
-        std::thread::sleep(std::time::Duration::from_secs(2));
-        libtest_mimic::run(&self.args, self.trials).exit_if_failed();
+        for chunk in self.chunks {
+            chunk.run();
+        }
     }
 }
 
@@ -24,35 +47,24 @@ where
     P: Fn(BoomerangTestClientConfig, bool) -> Trial,
 {
     let program_file = program_file.to_string();
-    let trials = tests
+    let chunks = tests
         .iter()
         .map(|(config, test_funcs)| {
-            test_funcs
+            let trials = test_funcs
                 .iter()
                 .map(|test_func| test_func(config.clone(), use_banks))
-                .collect::<Vec<_>>()
+                .collect();
+            BoomerangProgramTestChunk {
+                args: Arguments::from_args(),
+                config: config.clone(),
+                trials,
+            }
         })
-        .flatten()
-        .collect::<Vec<_>>();
+        .collect();
     BoomerangProgramTestIteration {
-        args: Arguments::from_args(),
+        chunks,
         program_file,
-        trials,
     }
-}
-
-pub fn build_iterations<P>(
-    program_files: &[&str],
-    tests: &[(BoomerangTestClientConfig, &[P])],
-    use_banks: bool,
-) -> Vec<BoomerangProgramTestIteration>
-where
-    P: Fn(BoomerangTestClientConfig, bool) -> Trial,
-{
-    program_files
-        .iter()
-        .map(|program_file| map_iteration(program_file, tests, use_banks))
-        .collect()
 }
 
 pub struct BoomerangProgramTest {
@@ -67,7 +79,10 @@ impl BoomerangProgramTest {
     where
         P: Fn(BoomerangTestClientConfig, bool) -> Trial,
     {
-        let iterations = build_iterations(program_files, tests, use_banks);
+        let iterations = program_files
+            .iter()
+            .map(|program_file| map_iteration(program_file, tests, use_banks))
+            .collect();
 
         Self { iterations }
     }

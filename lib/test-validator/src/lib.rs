@@ -35,13 +35,20 @@ impl BoomerangTestValidator {
         ledger_path: PathBuf,
         solana_cli_alias: String,
         solana_test_validator_alias: String,
-        start_options: &[BoomerangTestValidatorStartOptions],
+        start_options: &[&[BoomerangTestValidatorStartOptions]],
     ) -> Self {
-        let mut test_validator_start_options =
-            BoomerangTestValidatorStartOptions::args_to_string(start_options);
+        let mut test_validator_start_options = String::new();
+
+        start_options.iter().for_each(|options| {
+            test_validator_start_options.push_str(&format!(
+                " {}",
+                BoomerangTestValidatorStartOptions::args_to_string(options).as_str()
+            ));
+        });
+
         test_validator_start_options
             .push_str(format!(" --ledger {}", ledger_path.to_str().unwrap()).as_str());
-        println!("Start options: {:?}", test_validator_start_options);
+
         Self {
             ledger_path,
             solana_cli_alias,

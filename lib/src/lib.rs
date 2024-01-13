@@ -1,6 +1,7 @@
 mod dirs;
 pub mod integration;
 pub mod program;
+mod validator_options;
 
 use {
     client::BoomerangTestClientConfig, integration::BoomerangIntegrationTest, libtest_mimic::Trial,

@@ -8,18 +8,9 @@ use {
         pubkey::Pubkey,
         signature::{Keypair, Signature},
         slot_hashes::SlotHashes,
-        slot_history::Slot,
         transaction::{Transaction, TransactionError},
     },
 };
-
-fn overwrite_slot_hashes_with_slots(context: &ProgramTestContext, slots: &[Slot]) {
-    let mut slot_hashes = SlotHashes::default();
-    for slot in slots {
-        slot_hashes.add(*slot, Hash::new_unique());
-    }
-    context.set_sysvar(&slot_hashes);
-}
 
 pub struct BoomerangBanksClient {
     program_id: Pubkey,
@@ -37,7 +28,11 @@ impl BoomerangTestClient for BoomerangBanksClient {
         });
 
         let program_test_context = program_test.start_with_context().await;
-        overwrite_slot_hashes_with_slots(&program_test_context, &config.advance_slot_hashes);
+        if config.warp_slot > 0 {
+            let mut slot_hashes = SlotHashes::default();
+            slot_hashes.add(config.warp_slot, Hash::new_unique());
+            program_test_context.set_sysvar(&slot_hashes);
+        }
 
         Self {
             program_id,
