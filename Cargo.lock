@@ -553,7 +553,6 @@ name = "boomerang-cli"
 version = "0.1.0"
 dependencies = [
  "clap 4.4.16",
- "solana-boomerang",
  "tokio",
 ]
 
@@ -3569,8 +3568,10 @@ dependencies = [
 name = "solana-boomerang"
 version = "0.0.1"
 dependencies = [
+ "libtest-mimic",
  "solana-boomerang-client",
  "solana-boomerang-test-validator",
+ "tokio",
 ]
 
 [[package]]

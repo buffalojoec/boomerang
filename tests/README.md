@@ -13,17 +13,23 @@ You can find the tests using Boomerang in the
 Program tests:
 
 ```
-./boomerang
+./boomerang -p
 ```
 
-Compatibility tests:
+Integration tests:
 
 ```
-./boomerang --compatibility
+./boomerang -i
 ```
 
 Migration tests:
 
 ```
-./boomerang --migration
+./boomerang -m
+```
+
+All tests:
+
+```
+boomerang -pim
 ```

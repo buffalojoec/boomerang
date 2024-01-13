@@ -7,5 +7,7 @@ license = "Apache-2.0"
 edition = "2021"
 
 [dependencies]
+libtest-mimic = "0.6"
 solana-boomerang-client = { version = "0.0.1", path = "./client" }
 solana-boomerang-test-validator = { version = "0.0.1", path = "./test-validator" }
+tokio = { version = "1", features = ["full"] }

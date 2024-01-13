@@ -10,8 +10,7 @@ migrations are successful.
 Boomerang can perform the following tests on *any* Solana program:
 - **Program tests:** Executing program tests using `solana-program-tests`
   against a Banks client.
-- **Compatibility tests:** Executing test suites against multiple
-  implementations of a program to ensure compatibility.
+- **Integration tests:** Executing test suites against a live test validator.
 - **Migration tests:** Testing one program's implementation against a local
   validator, then using the Bank's migration module (SIMD 0088) to migrate to
   a different implementation of the same program and test that new

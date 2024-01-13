@@ -113,5 +113,10 @@ fn tests() -> Vec<Trial> {
 
 #[tokio::main]
 async fn main() {
-    libtest_mimic::run(&libtest_mimic::Arguments::from_args(), tests()).exit();
+    let program_tests = vec![solana_boomerang::program::BoomerangProgramTest {
+        program_implementation: "solana_address_lookup_table_program".to_string(),
+        trials: tests(),
+    }];
+    let boomerang = solana_boomerang::Boomerang { program_tests };
+    solana_boomerang::entrypoint(boomerang).await;
 }

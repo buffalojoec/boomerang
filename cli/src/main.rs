@@ -1,35 +1,43 @@
 use clap::Parser;
 
+fn run_command(command: &str) {
+    let status = std::process::Command::new("sh")
+        .arg("-c")
+        .arg(command)
+        .status()
+        .expect("failed to execute process");
+    assert!(status.success());
+}
+
 #[derive(Parser)]
 struct Cli {
-    /// Run compatibility tests between multiple program implementations.
+    /// Run integrations tests on a program.
     #[clap(short, long, action)]
-    compatibility: bool,
+    integration: bool,
     /// Run migration tests between two program implementations.
     #[clap(short, long, action)]
     migration: bool,
+    /// Run program tests on a program.
+    #[clap(short, long, action)]
+    program: bool,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
-    // Run tests on the program itself
-    println!("Running basic tests...");
-    println!("cargo test-sbf");
-
-    if cli.compatibility {
-        // Run tests on the other implementations
-        println!("Running compatibility tests...");
-        println!("COMPATIBILITY_TEST=1 cargo test-sbf");
+    let mut boomerang_vars = vec![];
+    if cli.program {
+        boomerang_vars.push("PROGRAM=true");
+    }
+    if cli.integration {
+        boomerang_vars.push("INTEGRATION=true");
     }
     if cli.migration {
-        // Run tests on the target program
-        // Execute the migration
-        // Run tests on the target program again
-        println!("Running migration tests...");
-        println!("MIGRATION_TEST=1 cargo test-sbf");
+        boomerang_vars.push("MIGRATION=true");
     }
+
+    run_command(&format!("{} cargo test-sbf", boomerang_vars.join(" ")));
 
     Ok(())
 }
