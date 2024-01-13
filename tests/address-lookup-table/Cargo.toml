@@ -22,10 +22,8 @@ spl-pod = "0.1.0"
 spl-program-error = "0.3.0"
 
 [dev-dependencies]
-libtest-mimic = "0.6"
-solana-boomerang = { version = "0.0.1", path = "../../lib" }
+solana-boomerang = { version = "0.1.0", path = "../../lib" }
 solana-sdk = "1.17.15"
-tokio = { version = "1", features = ["full"] }
 
 # Needed for `boomerang`
 [[test]]

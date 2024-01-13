@@ -1,56 +1,88 @@
+//! The idea here is that this entire file should be replaced by a minimal
+//! procedural macro attribute configuration.
+//!
+//! Perhaps you include the modules above this comment, and then you have a
+//! macro attribute that looks something like this:
+//!
+//! #[boomerang(
+//!     programs = [
+//!         (
+//!             "solana_address_lookup_table_program",
+//!             "927eaPZzYLFfox14h7UyaZjGk6yL7RSWjtmFv8dhBUki"
+//!         ),
+//!         (
+//!             "solana_address_lookup_table_program_zig",
+//!             "927eaPZzYLFfox14h7UyaZjGk6yL7RSWjtmFv8dhBUki"
+//!         ),
+//!     ],
+//!     program_tests = true,
+//!     integration_tests = true,
+//!     migration_tests(
+//!         source_program = "solana_address_lookup_table_program",
+//!         target_program = NativeProgram::AddressLookupTable,
+//!     ),
+//! )]
+//! async fn main() {}
+//!
+//! Additionally, for the tests themselves, you could have a macro attribute
+//! that looks something like this:
+//!
+//! #[boomerang::test]
+//! #[boomerang_test_config(
+//!     deactivate_features = [
+//!         feature_set::relax_authority_signer_check_for_lookup_table_creation::id(),
+//!     ],
+//!     warp_slot = 150,
+//! )]
+//! async fn test_1(mut client: BoomerangClient) {
+//!     /* .. */
+//! }
+
 mod create_lookup_table;
 
 use {
     create_lookup_table::TEST_RECENT_SLOT,
-    libtest_mimic::Trial,
-    solana_boomerang::client::{BoomerangClient, BoomerangTestClientConfig},
+    solana_boomerang::{
+        boomerang_trial,
+        client::{BoomerangClient, BoomerangTestClientConfig},
+        libtest_mimic::Trial,
+        tokio, BoomerangTests,
+    },
     solana_program::address_lookup_table,
     solana_sdk::{feature_set, pubkey::Pubkey},
     std::str::FromStr,
 };
 
-macro_rules! async_trial {
-    ($test_func:path) => {{
-        |config: BoomerangTestClientConfig, use_banks: bool| {
-            Trial::test(stringify!($test_func), move || {
-                tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .unwrap()
-                    .block_on(async {
-                        let client = BoomerangClient::new(&config, use_banks).await;
-                        $test_func(client).await
-                    });
-                Ok(())
-            })
-        }
-    }};
-}
-
 fn test_1(config: BoomerangTestClientConfig, use_banks: bool) -> Trial {
-    async_trial!(create_lookup_table::test_create_lookup_table_idempotent)(config, use_banks)
+    boomerang_trial!(create_lookup_table::test_create_lookup_table_idempotent)(config, use_banks)
 }
 
 fn test_2(config: BoomerangTestClientConfig, use_banks: bool) -> Trial {
-    async_trial!(create_lookup_table::test_create_lookup_table_not_idempotent)(config, use_banks)
+    boomerang_trial!(create_lookup_table::test_create_lookup_table_not_idempotent)(
+        config, use_banks,
+    )
 }
 
 fn test_3(config: BoomerangTestClientConfig, use_banks: bool) -> Trial {
-    async_trial!(create_lookup_table::test_create_lookup_table_use_payer_as_authority)(
+    boomerang_trial!(create_lookup_table::test_create_lookup_table_use_payer_as_authority)(
         config, use_banks,
     )
 }
 
 fn test_4(config: BoomerangTestClientConfig, use_banks: bool) -> Trial {
-    async_trial!(create_lookup_table::test_create_lookup_table_missing_signer)(config, use_banks)
+    boomerang_trial!(create_lookup_table::test_create_lookup_table_missing_signer)(
+        config, use_banks,
+    )
 }
 
 fn test_5(config: BoomerangTestClientConfig, use_banks: bool) -> Trial {
-    async_trial!(create_lookup_table::test_create_lookup_table_not_recent_slot)(config, use_banks)
+    boomerang_trial!(create_lookup_table::test_create_lookup_table_not_recent_slot)(
+        config, use_banks,
+    )
 }
 
 fn test_6(config: BoomerangTestClientConfig, use_banks: bool) -> Trial {
-    async_trial!(create_lookup_table::test_create_lookup_table_pda_mismatch)(config, use_banks)
+    boomerang_trial!(create_lookup_table::test_create_lookup_table_pda_mismatch)(config, use_banks)
 }
 
 #[tokio::main]
@@ -102,16 +134,11 @@ async fn main() {
         ..BoomerangTestClientConfig::default()
     };
 
-    let tests: &[(
-        BoomerangTestClientConfig,
-        &[fn(BoomerangTestClientConfig, bool) -> Trial],
-    )] = &[
-        (config_advance_slot_hashes.clone(), &[test_1]),
+    let tests: BoomerangTests = &[
+        (config_advance_slot_hashes, &[test_1, test_3, test_6]),
         (config_advance_slot_hashes_and_disable_feature, &[test_2]),
-        (config_advance_slot_hashes.clone(), &[test_3]),
         (config_disable_feature, &[test_4]),
         (config_default, &[test_5]),
-        (config_advance_slot_hashes, &[test_6]),
     ];
 
     solana_boomerang::entrypoint(programs, tests).await;

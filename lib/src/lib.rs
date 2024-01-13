@@ -8,21 +8,40 @@ use {
     program::BoomerangProgramTest, solana_sdk::pubkey::Pubkey,
 };
 pub use {
+    libtest_mimic,
     solana_boomerang_client as client,
     // solana_boomerang_macros as boomerang,
     solana_boomerang_test_validator as test_validator,
+    tokio,
 };
 
 fn parse_env(variable: &str) -> bool {
     std::env::var(variable).unwrap_or_default() == "true"
 }
 
-pub async fn entrypoint<P>(
-    programs: &[(&str, &Pubkey)],
-    tests: &[(BoomerangTestClientConfig, &[P])],
-) where
-    P: Fn(BoomerangTestClientConfig, bool) -> Trial,
-{
+#[macro_export]
+macro_rules! boomerang_trial {
+    ($test_func:path) => {{
+        |config: BoomerangTestClientConfig, use_banks: bool| {
+            Trial::test(stringify!($test_func), move || {
+                tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .unwrap()
+                    .block_on(async {
+                        let client = BoomerangClient::new(&config, use_banks).await;
+                        $test_func(client).await
+                    });
+                Ok(())
+            })
+        }
+    }};
+}
+
+type BoomerangTestFn = fn(BoomerangTestClientConfig, bool) -> Trial;
+pub type BoomerangTests<'a> = &'a [(BoomerangTestClientConfig, &'a [BoomerangTestFn])];
+
+pub async fn entrypoint(programs: &[(&str, &Pubkey)], tests: BoomerangTests<'_>) {
     let integration = parse_env("INTEGRATION");
     let migration = parse_env("MIGRATION");
     let program = parse_env("PROGRAM");

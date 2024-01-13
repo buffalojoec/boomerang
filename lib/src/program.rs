@@ -1,4 +1,5 @@
 use {
+    crate::BoomerangTests,
     libtest_mimic::{Arguments, Trial},
     solana_boomerang_client::BoomerangTestClientConfig,
 };
@@ -38,14 +39,11 @@ impl BoomerangProgramTestIteration {
     }
 }
 
-pub fn map_iteration<P>(
+pub fn map_iteration(
     program_file: &str,
-    tests: &[(BoomerangTestClientConfig, &[P])],
+    tests: BoomerangTests<'_>,
     use_banks: bool,
-) -> BoomerangProgramTestIteration
-where
-    P: Fn(BoomerangTestClientConfig, bool) -> Trial,
-{
+) -> BoomerangProgramTestIteration {
     let program_file = program_file.to_string();
     let chunks = tests
         .iter()
@@ -71,14 +69,7 @@ pub struct BoomerangProgramTest {
     iterations: Vec<BoomerangProgramTestIteration>,
 }
 impl BoomerangProgramTest {
-    fn new<P>(
-        program_files: &[&str],
-        tests: &[(BoomerangTestClientConfig, &[P])],
-        use_banks: bool,
-    ) -> Self
-    where
-        P: Fn(BoomerangTestClientConfig, bool) -> Trial,
-    {
+    fn new(program_files: &[&str], tests: BoomerangTests<'_>, use_banks: bool) -> Self {
         let iterations = program_files
             .iter()
             .map(|program_file| map_iteration(program_file, tests, use_banks))
@@ -87,23 +78,11 @@ impl BoomerangProgramTest {
         Self { iterations }
     }
 
-    pub fn new_with_banks<P>(
-        program_files: &[&str],
-        tests: &[(BoomerangTestClientConfig, &[P])],
-    ) -> Self
-    where
-        P: Fn(BoomerangTestClientConfig, bool) -> Trial,
-    {
+    pub fn new_with_banks(program_files: &[&str], tests: BoomerangTests<'_>) -> Self {
         Self::new(program_files, tests, /* use_banks */ true)
     }
 
-    pub fn new_with_rpc<P>(
-        program_files: &[&str],
-        tests: &[(BoomerangTestClientConfig, &[P])],
-    ) -> Self
-    where
-        P: Fn(BoomerangTestClientConfig, bool) -> Trial,
-    {
+    pub fn new_with_rpc(program_files: &[&str], tests: BoomerangTests<'_>) -> Self {
         Self::new(program_files, tests, /* use_banks */ false)
     }
 

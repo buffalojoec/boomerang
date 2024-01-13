@@ -3,9 +3,8 @@ use {
         dirs,
         program::{map_iteration, BoomerangProgramTestIteration},
         validator_options::IntoTestValidatorStartOptions,
+        BoomerangTests,
     },
-    libtest_mimic::Trial,
-    solana_boomerang_client::BoomerangTestClientConfig,
     solana_boomerang_test_validator::{
         start_options::{AddressOrKeypair, BoomerangTestValidatorStartOptions},
         BoomerangTestValidator,
@@ -31,10 +30,7 @@ pub struct BoomerangIntegrationTest {
     test_validator_start_options: Vec<BoomerangTestValidatorStartOptions>,
 }
 impl BoomerangIntegrationTest {
-    pub fn new<P>(programs: &[(&str, &Pubkey)], tests: &[(BoomerangTestClientConfig, &[P])]) -> Self
-    where
-        P: Fn(BoomerangTestClientConfig, bool) -> Trial,
-    {
+    pub fn new(programs: &[(&str, &Pubkey)], tests: BoomerangTests<'_>) -> Self {
         let mut iterations = vec![];
 
         let mut upgradeable_bpf_programs = vec![];

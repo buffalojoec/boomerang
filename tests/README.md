@@ -31,5 +31,5 @@ Migration tests:
 All tests:
 
 ```
-boomerang -pim
+./boomerang -pim
 ```

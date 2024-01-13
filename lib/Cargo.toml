@@ -1,6 +1,6 @@
 [package]
 name = "solana-boomerang"
-version = "0.0.1"
+version = "0.1.0"
 description = "Implementation-agnostic Solana program test harness" 
 authors = ["Solana Labs Maintainers <maintainers@solanalabs.com>"]
 license = "Apache-2.0"
@@ -10,6 +10,7 @@ edition = "2021"
 cargo_metadata = "0.18.1"
 libtest-mimic = "0.6"
 serde_json = "1.0.111"
-solana-boomerang-client = { version = "0.0.1", path = "./client" }
-solana-boomerang-test-validator = { version = "0.0.1", path = "./test-validator" }
+solana-boomerang-client = { version = "0.1.0", path = "./client" }
+solana-boomerang-test-validator = { version = "0.1.0", path = "./test-validator" }
 solana-sdk = "1.17.15"
+tokio = { version = "1", features = ["full"] }
