@@ -5,4 +5,12 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.0.29", features = ["derive"] }
+solana-boomerang = { version = "0.0.1", path = "../lib" }
 tokio = { version = "1", features = ["full"] }
+
+[[bin]]
+name = "boomerang"
+path = "src/main.rs"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]

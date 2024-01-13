@@ -1,8 +1,8 @@
 #![cfg(feature = "test-sbf")]
 
 use {
-    boomerang::client::{BoomerangClient, BoomerangTestClient},
     solana_address_lookup_table_program::state::{AddressLookupTable, LookupTableMeta},
+    solana_boomerang::client::{BoomerangClient, BoomerangTestClient},
     solana_program::instruction::InstructionError,
     solana_sdk::{
         address_lookup_table::instruction::{create_lookup_table, create_lookup_table_signed},

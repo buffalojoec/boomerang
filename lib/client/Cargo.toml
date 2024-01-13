@@ -1,5 +1,5 @@
 [package]
-name = "boomerang-client"
+name = "solana-boomerang-client"
 version = "0.0.1"
 edition = "2021"
 

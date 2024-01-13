@@ -1,8 +1,11 @@
 [package]
-name = "boomerang"
+name = "solana-boomerang"
 version = "0.0.1"
+description = "Implementation-agnostic Solana program test harness" 
+authors = ["Solana Labs Maintainers <maintainers@solanalabs.com>"]
+license = "Apache-2.0"
 edition = "2021"
 
 [dependencies]
-boomerang-client = { version = "0.0.1", path = "./client" }
-boomerang-test-validator = { version = "0.0.1", path = "./test-validator" }
+solana-boomerang-client = { version = "0.0.1", path = "./client" }
+solana-boomerang-test-validator = { version = "0.0.1", path = "./test-validator" }

@@ -549,28 +549,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 
 [[package]]
-name = "boomerang"
-version = "0.0.1"
-dependencies = [
- "boomerang-client",
-]
-
-[[package]]
 name = "boomerang-cli"
 version = "0.1.0"
 dependencies = [
  "clap 4.4.16",
+ "solana-boomerang",
  "tokio",
-]
-
-[[package]]
-name = "boomerang-client"
-version = "0.0.1"
-dependencies = [
- "async-trait",
- "solana-client",
- "solana-program-test",
- "solana-sdk",
 ]
 
 [[package]]
@@ -3269,6 +3253,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_yaml"
+version = "0.9.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1bf28c79a99f70ee1f1d83d10c875d2e70618417fda01ad1785e027579d9d38"
+dependencies = [
+ "indexmap 2.1.0",
+ "itoa",
+ "ryu",
+ "serde",
+ "unsafe-libyaml",
+]
+
+[[package]]
 name = "sha1"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3485,11 +3482,11 @@ name = "solana-address-lookup-table-program"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "boomerang",
  "bytemuck",
  "libtest-mimic",
  "log",
  "serde",
+ "solana-boomerang",
  "solana-frozen-abi",
  "solana-frozen-abi-macro",
  "solana-program",
@@ -3566,6 +3563,33 @@ dependencies = [
  "tarpc",
  "tokio",
  "tokio-serde",
+]
+
+[[package]]
+name = "solana-boomerang"
+version = "0.0.1"
+dependencies = [
+ "solana-boomerang-client",
+ "solana-boomerang-test-validator",
+]
+
+[[package]]
+name = "solana-boomerang-client"
+version = "0.0.1"
+dependencies = [
+ "async-trait",
+ "solana-client",
+ "solana-program-test",
+ "solana-sdk",
+]
+
+[[package]]
+name = "solana-boomerang-test-validator"
+version = "0.0.1"
+dependencies = [
+ "serde",
+ "serde_yaml",
+ "solana-sdk",
 ]
 
 [[package]]
@@ -5384,6 +5408,12 @@ checksum = "382810877fe448991dfc7f0dd6e3ae5d58088fd0ea5e35189655f84e6814fa56"
 dependencies = [
  "void",
 ]
+
+[[package]]
+name = "unsafe-libyaml"
+version = "0.2.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab4c90930b95a82d00dc9e9ac071b4991924390d46cbd0dfe566148667605e4b"
 
 [[package]]
 name = "untrusted"

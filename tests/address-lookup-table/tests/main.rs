@@ -1,9 +1,9 @@
 mod create_lookup_table;
 
 use {
-    boomerang::client::{BoomerangClient, BoomerangTestClientConfig},
     create_lookup_table::TEST_RECENT_SLOT,
     libtest_mimic::Trial,
+    solana_boomerang::client::{BoomerangClient, BoomerangTestClientConfig},
     solana_program::address_lookup_table,
     solana_sdk::feature_set,
     std::sync::Arc,
