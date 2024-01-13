@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 boomerang-client = { version = "0.0.1", path = "./client" }
+boomerang-test-validator = { version = "0.0.1", path = "./test-validator" }
