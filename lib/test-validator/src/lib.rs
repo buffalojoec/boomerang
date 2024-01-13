@@ -1,7 +1,10 @@
 pub mod config_file;
 pub mod start_options;
 
-use {start_options::BoomerangTestValidatorStartOptions, std::process::Stdio};
+use {
+    start_options::BoomerangTestValidatorStartOptions,
+    std::{path::PathBuf, process::Stdio},
+};
 
 fn run_command(command: &str) {
     let status = std::process::Command::new("sh")
@@ -22,30 +25,24 @@ fn run_command_detached(command: &str) {
 }
 
 pub struct BoomerangTestValidator {
+    ledger_path: PathBuf,
     solana_cli_alias: String,
     solana_test_validator_alias: String,
     test_validator_start_options: String,
 }
-impl Default for BoomerangTestValidator {
-    fn default() -> Self {
-        Self {
-            solana_cli_alias: "solana".to_string(),
-            solana_test_validator_alias: "solana-test-validator".to_string(),
-            test_validator_start_options: "".to_string(),
-        }
-    }
-}
 impl BoomerangTestValidator {
     pub fn new(
+        ledger_path: PathBuf,
         solana_cli_alias: String,
         solana_test_validator_alias: String,
-        test_validator_start_options: Vec<BoomerangTestValidatorStartOptions>,
+        start_options: &[BoomerangTestValidatorStartOptions],
     ) -> Self {
         Self {
+            ledger_path,
             solana_cli_alias,
             solana_test_validator_alias,
             test_validator_start_options: BoomerangTestValidatorStartOptions::args_to_string(
-                test_validator_start_options,
+                start_options,
             ),
         }
     }
@@ -61,10 +58,18 @@ impl BoomerangTestValidator {
 
     /// Start the test validator
     pub fn solana_test_validator_start(&self) {
+        println!("Starting test validator");
         let command = format!(
             "{} {}",
             self.solana_test_validator_alias, self.test_validator_start_options,
         );
-        run_command_detached(&command)
+        run_command_detached(&command);
+        std::thread::sleep(std::time::Duration::from_secs(5));
+    }
+
+    /// Tear down the test validator
+    pub fn solana_test_validator_teardown(&self) {
+        let command = format!("rm -rf {}", self.ledger_path.to_str().unwrap());
+        run_command(&command)
     }
 }

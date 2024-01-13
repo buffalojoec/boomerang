@@ -54,8 +54,6 @@ pub enum BoomerangTestValidatorStartOptions {
     Config { path: PathBuf },
     /// Deactivate this feature in genesis
     DeactivateFeature { feature_pubkey: Pubkey },
-    /// Use DIR as ledger location
-    Ledger { dir: PathBuf },
     /// Copy an account from the cluster referenced by the --url argument,
     /// skipping it if it doesn't exist
     MaybeClone { address: Pubkey },
@@ -107,9 +105,6 @@ impl ToStringArg for BoomerangTestValidatorStartOptions {
             Self::DeactivateFeature { feature_pubkey } => {
                 format!("--deactivate-feature {}", feature_pubkey.to_string())
             }
-            Self::Ledger { dir } => {
-                format!("--ledger {}", dir.to_string_arg())
-            }
             Self::MaybeClone { address } => {
                 format!("--maybe-clone {}", address.to_string())
             }
@@ -143,7 +138,7 @@ impl ToStringArg for BoomerangTestValidatorStartOptions {
     }
 }
 impl BoomerangTestValidatorStartOptions {
-    pub fn args_to_string(args: Vec<Self>) -> String {
+    pub fn args_to_string(args: &[Self]) -> String {
         args.into_iter()
             .map(|arg| arg.to_string_arg())
             .collect::<Vec<String>>()

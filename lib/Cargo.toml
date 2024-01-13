@@ -7,7 +7,9 @@ license = "Apache-2.0"
 edition = "2021"
 
 [dependencies]
+cargo_metadata = "0.18.1"
 libtest-mimic = "0.6"
+serde_json = "1.0.111"
 solana-boomerang-client = { version = "0.0.1", path = "./client" }
 solana-boomerang-test-validator = { version = "0.0.1", path = "./test-validator" }
-tokio = { version = "1", features = ["full"] }
+solana-sdk = "1.17.15"

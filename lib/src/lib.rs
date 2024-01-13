@@ -1,55 +1,44 @@
+mod dirs;
+pub mod integration;
+pub mod program;
+
+use {
+    integration::BoomerangIntegrationTest, libtest_mimic::Trial, program::BoomerangProgramTest,
+    solana_sdk::pubkey::Pubkey,
+};
 pub use {
     solana_boomerang_client as client,
     // solana_boomerang_macros as boomerang,
     solana_boomerang_test_validator as test_validator,
 };
 
-// mod compatibility;
-// mod integration;
-// mod migration;
-pub mod program;
-
-// use compatibility::BoomerangCompatibilityTest;
-// use integration::BoomerangIntegrationTest;
-// use migration::BoomerangMigrationTest;
-use program::BoomerangProgramTest;
-
 fn parse_env(variable: &str) -> bool {
     std::env::var(variable).unwrap_or_default() == "true"
 }
 
-pub struct Boomerang {
-    pub program_tests: Vec<BoomerangProgramTest>,
-    // pub compatibility_tests: Vec<BoomerangCompatibilityTest>,
-    // pub integration_tests: Vec<BoomerangIntegrationTest>,
-    // pub migration_tests: Vec<BoomerangMigrationTest>,
-}
-
-pub async fn entrypoint(boomerang: Boomerang) {
-    let args = libtest_mimic::Arguments::from_args();
-
+pub async fn entrypoint<P>(program_files: &[&str], program_id: &Pubkey, tests: &[P])
+where
+    P: Fn(String, Pubkey, bool) -> Trial,
+{
     let integration = parse_env("INTEGRATION");
     let migration = parse_env("MIGRATION");
     let program = parse_env("PROGRAM");
 
     if !integration && !migration && !program {
-        // TODO: Print message
+        println!("No tests to run");
         return;
     }
 
     if program {
         // Run the program tests
-        for program_test in boomerang.program_tests {
-            println!(
-                "Running program tests for {}",
-                program_test.program_implementation
-            );
-            libtest_mimic::run(&args, program_test.trials).exit_if_failed();
-        }
+        let program_test = BoomerangProgramTest::new_with_banks(program_files, program_id, tests);
+        program_test.run();
     }
 
     if integration {
         // Run the integration tests
+        let integration_test = BoomerangIntegrationTest::new(program_files, program_id, tests);
+        integration_test.run();
     }
 
     if migration {
