@@ -37,13 +37,16 @@ impl BoomerangTestValidator {
         solana_test_validator_alias: String,
         start_options: &[BoomerangTestValidatorStartOptions],
     ) -> Self {
+        let mut test_validator_start_options =
+            BoomerangTestValidatorStartOptions::args_to_string(start_options);
+        test_validator_start_options
+            .push_str(format!(" --ledger {}", ledger_path.to_str().unwrap()).as_str());
+        println!("Start options: {:?}", test_validator_start_options);
         Self {
             ledger_path,
             solana_cli_alias,
             solana_test_validator_alias,
-            test_validator_start_options: BoomerangTestValidatorStartOptions::args_to_string(
-                start_options,
-            ),
+            test_validator_start_options,
         }
     }
 
@@ -59,6 +62,7 @@ impl BoomerangTestValidator {
     /// Start the test validator
     pub fn solana_test_validator_start(&self) {
         println!("Starting test validator");
+        println!("Ledger path: {:?}", self.ledger_path);
         let command = format!(
             "{} {}",
             self.solana_test_validator_alias, self.test_validator_start_options,
@@ -69,7 +73,10 @@ impl BoomerangTestValidator {
 
     /// Tear down the test validator
     pub fn solana_test_validator_teardown(&self) {
+        println!("Tearing down test validator");
+        println!("Ledger path: {:?}", self.ledger_path);
         let command = format!("rm -rf {}", self.ledger_path.to_str().unwrap());
-        run_command(&command)
+        run_command(&command);
+        std::thread::sleep(std::time::Duration::from_secs(2));
     }
 }

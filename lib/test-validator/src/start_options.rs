@@ -77,11 +77,9 @@ pub enum BoomerangTestValidatorStartOptions {
 impl ToStringArg for BoomerangTestValidatorStartOptions {
     fn to_string_arg(&self) -> String {
         match self {
-            Self::Account { address, dump_path } => format!(
-                "--account {} {}",
-                address,
-                dump_path.to_string_arg()
-            ),
+            Self::Account { address, dump_path } => {
+                format!("--account {} {}", address, dump_path.to_string_arg())
+            }
             Self::AccountDir { directory } => {
                 format!("--account-dir {}", directory.to_string_arg())
             }
