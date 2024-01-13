@@ -90,15 +90,21 @@ impl syn::parse::Parse for ParsedEntrypointArg {
         if input.peek(syn::Ident) {
             let ident = input.parse::<syn::Ident>()?;
             match ident.to_string().as_str() {
-                "programs" => ParsedProgramsArg::parse(input).map(|parsed| Self::Programs(parsed)),
+                "programs" => {
+                    let arg = ParsedProgramsArg::parse(input)?;
+                    Ok(Self::Programs(arg))
+                }
                 "program_tests" => {
-                    ParsedTestArg::parse(input).map(|parsed| Self::ProgramTests(parsed))
+                    let arg = ParsedTestArg::parse(input)?;
+                    Ok(Self::ProgramTests(arg))
                 }
                 "integration_tests" => {
-                    ParsedTestArg::parse(input).map(|parsed| Self::IntegrationTests(parsed))
+                    let arg = ParsedTestArg::parse(input)?;
+                    Ok(Self::IntegrationTests(arg))
                 }
                 "migration_tests" => {
-                    ParsedMigrationTestArg::parse(input).map(|parsed| Self::MigrationTests(parsed))
+                    let arg = ParsedMigrationTestArg::parse(input)?;
+                    Ok(Self::MigrationTests(arg))
                 }
                 _ => Err(syn::Error::new(input.span(), "Unknown argument")),
             }

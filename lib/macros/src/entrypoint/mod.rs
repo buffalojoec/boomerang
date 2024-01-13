@@ -1,8 +1,11 @@
+mod parser;
+
 pub struct SolanaBoomerangEntrypoint {
     programs: Vec<(String, String)>,
     program_tests: bool,
     integration_tests: bool,
     migration_tests: Vec<(String, String)>,
+    _trials: Vec<(String, String)>,
 }
 impl SolanaBoomerangEntrypoint {
     pub fn new(
@@ -16,13 +19,14 @@ impl SolanaBoomerangEntrypoint {
             program_tests,
             integration_tests,
             migration_tests,
+            _trials: Vec::new(),
         }
     }
 }
 
 impl syn::parse::Parse for SolanaBoomerangEntrypoint {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        crate::parser::parse_entrypoint(input)
+        parser::parse_entrypoint(input)
     }
 }
 

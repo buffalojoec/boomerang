@@ -1,8 +1,18 @@
 use solana_boomerang::boomerang;
 
-#[boomerang::test]
+#[boomerang::test(
+    deactivate_features = [
+        feature_set::relax_authority_signer_check_for_lookup_table_creation::id,
+    ],
+    warp_slot = 150,
+)]
 fn this_is_a_test() {
     println!("This is a test");
+}
+
+#[boomerang::test]
+fn this_is_another_test() {
+    println!("This is another test");
 }
 
 #[boomerang::main(
