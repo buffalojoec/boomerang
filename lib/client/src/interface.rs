@@ -6,7 +6,7 @@ use {
         hash::Hash,
         instruction::{Instruction, InstructionError},
         pubkey::Pubkey,
-        signature::Keypair,
+        signature::{Keypair, Signature},
         signer::Signer,
         slot_history::Slot,
         transaction::{Transaction, TransactionError},
@@ -28,7 +28,7 @@ impl Default for BoomerangTestClientConfig {
             features_disabled: vec![],
             program_file: "program.so".to_string(),
             program_id: Pubkey::new_unique(),
-            rpc_commitment: CommitmentConfig::confirmed(),
+            rpc_commitment: CommitmentConfig::processed(),
             rpc_endpoint: "http://127.0.0.1:8899".to_string(),
         }
     }
@@ -54,6 +54,12 @@ pub trait BoomerangTestClient {
         &mut self,
         transaction: Transaction,
     ) -> Result<(), Option<TransactionError>>;
+
+    /// Confirm a transaction
+    async fn confirm_transaction(
+        &self,
+        signature: &Signature,
+    ) -> Result<(), Box<dyn std::error::Error>>;
 
     /// Get an account
     async fn get_account(

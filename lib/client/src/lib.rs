@@ -11,7 +11,7 @@ use {
         account::Account,
         hash::Hash,
         pubkey::Pubkey,
-        signature::Keypair,
+        signature::{Keypair, Signature},
         transaction::{Transaction, TransactionError},
     },
 };
@@ -91,6 +91,25 @@ impl BoomerangTestClient for BoomerangClient {
                 .as_mut()
                 .unwrap()
                 .process_transaction(transaction)
+                .await
+        }
+    }
+
+    async fn confirm_transaction(
+        &self,
+        signature: &Signature,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if self.use_banks {
+            self.banks
+                .as_ref()
+                .unwrap()
+                .confirm_transaction(signature)
+                .await
+        } else {
+            self.rpc
+                .as_ref()
+                .unwrap()
+                .confirm_transaction(signature)
                 .await
         }
     }

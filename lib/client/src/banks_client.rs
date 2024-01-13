@@ -6,7 +6,7 @@ use {
         account::Account,
         hash::Hash,
         pubkey::Pubkey,
-        signature::Keypair,
+        signature::{Keypair, Signature},
         slot_hashes::SlotHashes,
         slot_history::Slot,
         transaction::{Transaction, TransactionError},
@@ -64,6 +64,13 @@ impl BoomerangTestClient for BoomerangBanksClient {
             .process_transaction(transaction)
             .await
             .map_err(|err| Some(err.unwrap()))
+    }
+
+    async fn confirm_transaction(
+        &self,
+        _signature: &Signature,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(())
     }
 
     async fn get_account(
