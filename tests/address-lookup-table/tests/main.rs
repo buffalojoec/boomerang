@@ -6,7 +6,6 @@ use {
     solana_boomerang::client::{BoomerangClient, BoomerangTestClientConfig},
     solana_program::address_lookup_table,
     solana_sdk::{feature_set, pubkey::Pubkey},
-    tokio,
 };
 
 const PROGRAM_IMPLEMENTATIONS: &[&str] = &[

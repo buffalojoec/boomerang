@@ -79,7 +79,7 @@ impl ToStringArg for BoomerangTestValidatorStartOptions {
         match self {
             Self::Account { address, dump_path } => format!(
                 "--account {} {}",
-                address.to_string(),
+                address,
                 dump_path.to_string_arg()
             ),
             Self::AccountDir { directory } => {
@@ -94,25 +94,25 @@ impl ToStringArg for BoomerangTestValidatorStartOptions {
                 so_file_path.to_string_arg()
             ),
             Self::Clone { address } => {
-                format!("--clone {}", address.to_string())
+                format!("--clone {}", address)
             }
             Self::CloneUpgradeableProgram { address } => {
-                format!("--clone-upgradeable-program {}", address.to_string())
+                format!("--clone-upgradeable-program {}", address)
             }
             Self::Config { path } => {
                 format!("--config {}", path.to_string_arg())
             }
             Self::DeactivateFeature { feature_pubkey } => {
-                format!("--deactivate-feature {}", feature_pubkey.to_string())
+                format!("--deactivate-feature {}", feature_pubkey)
             }
             Self::MaybeClone { address } => {
-                format!("--maybe-clone {}", address.to_string())
+                format!("--maybe-clone {}", address)
             }
             Self::Mint { address } => {
-                format!("--mint {}", address.to_string())
+                format!("--mint {}", address)
             }
             Self::SlotsPerEpoch { slots } => {
-                format!("--slots-per-epoch {}", slots.to_string())
+                format!("--slots-per-epoch {}", slots)
             }
             Self::UpgradeableProgram {
                 address_or_keypair,
@@ -132,14 +132,14 @@ impl ToStringArg for BoomerangTestValidatorStartOptions {
                 UrlOrMoniker::MainnetBeta => "-um".to_string(),
             },
             Self::WarpSlot { warp_slot } => {
-                format!("--warp-slot {}", warp_slot.to_string())
+                format!("--warp-slot {}", warp_slot)
             }
         }
     }
 }
 impl BoomerangTestValidatorStartOptions {
     pub fn args_to_string(args: &[Self]) -> String {
-        args.into_iter()
+        args.iter()
             .map(|arg| arg.to_string_arg())
             .collect::<Vec<String>>()
             .join(" ")

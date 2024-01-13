@@ -70,9 +70,9 @@ impl BoomerangIntegrationTest {
                 let upgrade_authority_keypair = Keypair::new();
 
                 // Write the keypairs to the temporary directory
-                let program_keypair_path = get_program_keypair_path(*program_file);
+                let program_keypair_path = get_program_keypair_path(program_file);
                 let upgrade_authority_keypair_path =
-                    get_upgrade_authority_keypair_path(*program_file);
+                    get_upgrade_authority_keypair_path(program_file);
                 dirs::write_keypair_to_path(&program_keypair, &program_keypair_path).unwrap();
                 dirs::write_keypair_to_path(
                     &upgrade_authority_keypair,
@@ -82,7 +82,7 @@ impl BoomerangIntegrationTest {
 
                 BoomerangTestValidatorStartOptions::UpgradeableProgram {
                     address_or_keypair: AddressOrKeypair::Keypair(program_keypair_path),
-                    so_file_path: get_program_so_path(*program_file),
+                    so_file_path: get_program_so_path(program_file),
                     upgrade_authority: AddressOrKeypair::Keypair(upgrade_authority_keypair_path),
                 }
             })

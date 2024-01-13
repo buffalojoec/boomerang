@@ -25,10 +25,10 @@ pub struct BoomerangClient {
 impl BoomerangClient {
     pub async fn new(config: &BoomerangTestClientConfig, use_banks: bool) -> Self {
         let (banks, rpc) = if use_banks {
-            let banks = BoomerangBanksClient::setup(&config).await;
+            let banks = BoomerangBanksClient::setup(config).await;
             (Some(banks), None)
         } else {
-            let rpc = BoomerangRpcClient::setup(&config).await;
+            let rpc = BoomerangRpcClient::setup(config).await;
             (None, Some(rpc))
         };
         Self {
