@@ -1,16 +1,27 @@
 use {
     crate::interface::{BoomerangTestClient, BoomerangTestClientConfig},
     async_trait::async_trait,
-    solana_program_test::{BanksClient, ProgramTest, ProgramTestBanksClientExt},
+    solana_program_test::{
+        BanksClient, ProgramTest, ProgramTestBanksClientExt, ProgramTestContext,
+    },
     solana_sdk::{
         account::Account,
         hash::Hash,
         pubkey::Pubkey,
         signature::Keypair,
-        sysvar::{Sysvar, SysvarId},
+        slot_hashes::SlotHashes,
+        slot_history::Slot,
         transaction::{Transaction, TransactionError},
     },
 };
+
+fn overwrite_slot_hashes_with_slots(context: &ProgramTestContext, slots: &[Slot]) {
+    let mut slot_hashes = SlotHashes::default();
+    for slot in slots {
+        slot_hashes.add(*slot, Hash::new_unique());
+    }
+    context.set_sysvar(&slot_hashes);
+}
 
 pub struct BoomerangBanksClient {
     banks_client: BanksClient,
@@ -26,6 +37,7 @@ impl BoomerangTestClient for BoomerangBanksClient {
             program_test.deactivate_feature(*feature);
         });
         let context = program_test.start_with_context().await;
+        overwrite_slot_hashes_with_slots(&context, &config.advance_slot_hashes);
         let banks_client = context.banks_client;
         let fee_payer = context.payer;
         let latest_blockhash = context.last_blockhash;
@@ -45,10 +57,13 @@ impl BoomerangTestClient for BoomerangBanksClient {
     }
 
     async fn new_latest_blockhash(&mut self) -> Hash {
-        self.banks_client
+        let new_blockhash = self
+            .banks_client
             .get_new_latest_blockhash(&self.latest_blockhash)
             .await
-            .unwrap()
+            .unwrap();
+        self.latest_blockhash = new_blockhash;
+        new_blockhash
     }
 
     async fn process_transaction(
@@ -69,9 +84,5 @@ impl BoomerangTestClient for BoomerangBanksClient {
             .get_account(*pubkey)
             .await
             .map_err(|err| err.into())
-    }
-
-    fn set_sysvar<T: SysvarId + Sysvar>(&self, _sysvar: &T) {
-        unimplemented!()
     }
 }

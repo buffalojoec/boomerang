@@ -12,7 +12,6 @@ use {
         hash::Hash,
         pubkey::Pubkey,
         signature::Keypair,
-        sysvar::{Sysvar, SysvarId},
         transaction::{Transaction, TransactionError},
     },
 };
@@ -24,7 +23,7 @@ pub struct BoomerangClient {
     pub use_banks: bool,
 }
 impl BoomerangClient {
-    pub async fn new(config: BoomerangTestClientConfig, use_banks: bool) -> Self {
+    pub async fn new(config: &BoomerangTestClientConfig, use_banks: bool) -> Self {
         let (banks, rpc) = if use_banks {
             let banks = BoomerangBanksClient::setup(&config).await;
             (Some(banks), None)
@@ -104,14 +103,6 @@ impl BoomerangTestClient for BoomerangClient {
             self.banks.as_mut().unwrap().get_account(pubkey).await
         } else {
             self.rpc.as_mut().unwrap().get_account(pubkey).await
-        }
-    }
-
-    fn set_sysvar<T: SysvarId + Sysvar>(&self, sysvar: &T) {
-        if self.use_banks {
-            self.banks.as_ref().unwrap().set_sysvar(sysvar)
-        } else {
-            self.rpc.as_ref().unwrap().set_sysvar(sysvar)
         }
     }
 }

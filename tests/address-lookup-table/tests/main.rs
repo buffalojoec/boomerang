@@ -1,13 +1,14 @@
+mod create_lookup_table;
+
 use {
-    boomerang::client::{BoomerangClient, BoomerangTestClient, BoomerangTestClientConfig},
+    boomerang::client::{BoomerangClient, BoomerangTestClientConfig},
+    create_lookup_table::TEST_RECENT_SLOT,
     libtest_mimic::Trial,
     solana_program::address_lookup_table,
     solana_sdk::feature_set,
     std::sync::Arc,
     tokio,
 };
-
-mod create_lookup_table;
 
 const PROGRAM_IMPLEMENTATIONS: &[&str] = &[
     "solana_address_lookup_table_program",
@@ -23,7 +24,7 @@ macro_rules! async_trial {
                 .build()
                 .unwrap()
                 .block_on(async {
-                    let client = BoomerangClient::setup(&config).await;
+                    let client = BoomerangClient::new(&config, /* use_banks */ true).await;
                     $test_func(client).await
                 });
             Ok(())
@@ -35,17 +36,46 @@ fn tests() -> Vec<Trial> {
     PROGRAM_IMPLEMENTATIONS
         .iter()
         .flat_map(|program_file| {
-            let config = Arc::new(BoomerangTestClientConfig {
+            let config1 = Arc::new(BoomerangTestClientConfig {
+                advance_slot_hashes: vec![TEST_RECENT_SLOT],
                 features_disabled: vec![],
                 program_file: program_file.to_string(),
                 program_id: address_lookup_table::program::id(),
                 ..BoomerangTestClientConfig::default()
             });
-
-            let config_feature_disabled = Arc::new(BoomerangTestClientConfig {
+            let config2 = Arc::new(BoomerangTestClientConfig {
+                advance_slot_hashes: vec![TEST_RECENT_SLOT],
                 features_disabled: vec![
                     feature_set::relax_authority_signer_check_for_lookup_table_creation::id(),
                 ],
+                program_file: program_file.to_string(),
+                program_id: address_lookup_table::program::id(),
+                ..BoomerangTestClientConfig::default()
+            });
+            let config3 = Arc::new(BoomerangTestClientConfig {
+                advance_slot_hashes: vec![TEST_RECENT_SLOT],
+                features_disabled: vec![],
+                program_file: program_file.to_string(),
+                program_id: address_lookup_table::program::id(),
+                ..BoomerangTestClientConfig::default()
+            });
+            let config4 = Arc::new(BoomerangTestClientConfig {
+                features_disabled: vec![
+                    feature_set::relax_authority_signer_check_for_lookup_table_creation::id(),
+                ],
+                program_file: program_file.to_string(),
+                program_id: address_lookup_table::program::id(),
+                ..BoomerangTestClientConfig::default()
+            });
+            let config5 = Arc::new(BoomerangTestClientConfig {
+                features_disabled: vec![],
+                program_file: program_file.to_string(),
+                program_id: address_lookup_table::program::id(),
+                ..BoomerangTestClientConfig::default()
+            });
+            let config6 = Arc::new(BoomerangTestClientConfig {
+                advance_slot_hashes: vec![TEST_RECENT_SLOT],
+                features_disabled: vec![],
                 program_file: program_file.to_string(),
                 program_id: address_lookup_table::program::id(),
                 ..BoomerangTestClientConfig::default()
@@ -54,27 +84,27 @@ fn tests() -> Vec<Trial> {
             vec![
                 async_trial!(
                     create_lookup_table::test_create_lookup_table_idempotent,
-                    config
+                    config1
                 ),
                 async_trial!(
                     create_lookup_table::test_create_lookup_table_not_idempotent,
-                    config_feature_disabled
+                    config2
                 ),
                 async_trial!(
                     create_lookup_table::test_create_lookup_table_use_payer_as_authority,
-                    config
+                    config3
                 ),
                 async_trial!(
                     create_lookup_table::test_create_lookup_table_missing_signer,
-                    config_feature_disabled
+                    config4
                 ),
                 async_trial!(
                     create_lookup_table::test_create_lookup_table_not_recent_slot,
-                    config
+                    config5
                 ),
                 async_trial!(
                     create_lookup_table::test_create_lookup_table_pda_mismatch,
-                    config
+                    config6
                 ),
             ]
         })

@@ -8,12 +8,13 @@ use {
         pubkey::Pubkey,
         signature::Keypair,
         signer::Signer,
-        sysvar::{Sysvar, SysvarId},
+        slot_history::Slot,
         transaction::{Transaction, TransactionError},
     },
 };
 
 pub struct BoomerangTestClientConfig {
+    pub advance_slot_hashes: Vec<Slot>,
     pub features_disabled: Vec<Pubkey>,
     pub program_file: String,
     pub program_id: Pubkey,
@@ -23,6 +24,7 @@ pub struct BoomerangTestClientConfig {
 impl Default for BoomerangTestClientConfig {
     fn default() -> Self {
         Self {
+            advance_slot_hashes: vec![],
             features_disabled: vec![],
             program_file: "program.so".to_string(),
             program_id: Pubkey::new_unique(),
@@ -58,9 +60,6 @@ pub trait BoomerangTestClient {
         &mut self,
         pubkey: &Pubkey,
     ) -> Result<Option<Account>, Box<dyn std::error::Error>>;
-
-    /// Set a sysvar
-    fn set_sysvar<T: SysvarId + Sysvar>(&self, sysvar: &T);
 
     /// Create a transaction with the provided instructions, fee payer,
     /// signers, and recent blockhash

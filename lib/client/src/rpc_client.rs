@@ -7,7 +7,6 @@ use {
         hash::Hash,
         pubkey::Pubkey,
         signature::Keypair,
-        sysvar::{Sysvar, SysvarId},
         transaction::{Transaction, TransactionError},
     },
 };
@@ -64,10 +63,5 @@ impl BoomerangTestClient for BoomerangRpcClient {
             .await
             .map(|res| res.value)
             .map_err(|err| err.into())
-    }
-
-    fn set_sysvar<T: SysvarId + Sysvar>(&self, _sysvar: &T) {
-        // TODO: This is something we'll have to do at setup time
-        unimplemented!()
     }
 }
