@@ -13,6 +13,7 @@ use {
     },
 };
 
+#[derive(Clone)]
 pub struct BoomerangTestClientConfig {
     pub advance_slot_hashes: Vec<Slot>,
     pub features_disabled: Vec<Pubkey>,

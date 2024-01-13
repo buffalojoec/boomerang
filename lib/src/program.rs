@@ -1,6 +1,6 @@
 use {
     libtest_mimic::{Arguments, Trial},
-    solana_sdk::pubkey::Pubkey,
+    solana_boomerang_client::BoomerangTestClientConfig,
 };
 
 pub struct BoomerangProgramTestIteration {
@@ -17,18 +17,23 @@ impl BoomerangProgramTestIteration {
 
 pub fn map_iteration<P>(
     program_file: &str,
-    program_id: &Pubkey,
-    tests: &[P],
+    tests: &[(BoomerangTestClientConfig, &[P])],
     use_banks: bool,
 ) -> BoomerangProgramTestIteration
 where
-    P: Fn(String, Pubkey, bool) -> Trial,
+    P: Fn(BoomerangTestClientConfig, bool) -> Trial,
 {
     let program_file = program_file.to_string();
     let trials = tests
         .iter()
-        .map(|test| test(program_file.clone(), *program_id, use_banks))
-        .collect();
+        .map(|(config, test_funcs)| {
+            test_funcs
+                .iter()
+                .map(|test_func| test_func(config.clone(), use_banks))
+                .collect::<Vec<_>>()
+        })
+        .flatten()
+        .collect::<Vec<_>>();
     BoomerangProgramTestIteration {
         args: Arguments::from_args(),
         program_file,
@@ -38,16 +43,15 @@ where
 
 pub fn build_iterations<P>(
     program_files: &[&str],
-    program_id: &Pubkey,
-    tests: &[P],
+    tests: &[(BoomerangTestClientConfig, &[P])],
     use_banks: bool,
 ) -> Vec<BoomerangProgramTestIteration>
 where
-    P: Fn(String, Pubkey, bool) -> Trial,
+    P: Fn(BoomerangTestClientConfig, bool) -> Trial,
 {
     program_files
         .iter()
-        .map(|program_file| map_iteration(program_file, program_id, tests, use_banks))
+        .map(|program_file| map_iteration(program_file, tests, use_banks))
         .collect()
 }
 
@@ -55,27 +59,37 @@ pub struct BoomerangProgramTest {
     iterations: Vec<BoomerangProgramTestIteration>,
 }
 impl BoomerangProgramTest {
-    fn new<P>(program_files: &[&str], program_id: &Pubkey, tests: &[P], use_banks: bool) -> Self
+    fn new<P>(
+        program_files: &[&str],
+        tests: &[(BoomerangTestClientConfig, &[P])],
+        use_banks: bool,
+    ) -> Self
     where
-        P: Fn(String, Pubkey, bool) -> Trial,
+        P: Fn(BoomerangTestClientConfig, bool) -> Trial,
     {
-        let iterations = build_iterations(program_files, program_id, tests, use_banks);
+        let iterations = build_iterations(program_files, tests, use_banks);
 
         Self { iterations }
     }
 
-    pub fn new_with_banks<P>(program_files: &[&str], program_id: &Pubkey, tests: &[P]) -> Self
+    pub fn new_with_banks<P>(
+        program_files: &[&str],
+        tests: &[(BoomerangTestClientConfig, &[P])],
+    ) -> Self
     where
-        P: Fn(String, Pubkey, bool) -> Trial,
+        P: Fn(BoomerangTestClientConfig, bool) -> Trial,
     {
-        Self::new(program_files, program_id, tests, /* use_banks */ true)
+        Self::new(program_files, tests, /* use_banks */ true)
     }
 
-    pub fn new_with_rpc<P>(program_files: &[&str], program_id: &Pubkey, tests: &[P]) -> Self
+    pub fn new_with_rpc<P>(
+        program_files: &[&str],
+        tests: &[(BoomerangTestClientConfig, &[P])],
+    ) -> Self
     where
-        P: Fn(String, Pubkey, bool) -> Trial,
+        P: Fn(BoomerangTestClientConfig, bool) -> Trial,
     {
-        Self::new(program_files, program_id, tests, /* use_banks */ false)
+        Self::new(program_files, tests, /* use_banks */ false)
     }
 
     pub fn run(self) {

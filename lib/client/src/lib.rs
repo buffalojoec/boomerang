@@ -20,6 +20,7 @@ pub struct BoomerangClient {
     // I don't love this, btw.
     pub banks: Option<BoomerangBanksClient>,
     pub rpc: Option<BoomerangRpcClient>,
+    // Note: This field is possibly unused now.
     pub use_banks: bool,
 }
 impl BoomerangClient {

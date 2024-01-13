@@ -3,8 +3,8 @@ pub mod integration;
 pub mod program;
 
 use {
-    integration::BoomerangIntegrationTest, libtest_mimic::Trial, program::BoomerangProgramTest,
-    solana_sdk::pubkey::Pubkey,
+    client::BoomerangTestClientConfig, integration::BoomerangIntegrationTest, libtest_mimic::Trial,
+    program::BoomerangProgramTest, solana_sdk::pubkey::Pubkey,
 };
 pub use {
     solana_boomerang_client as client,
@@ -17,12 +17,10 @@ fn parse_env(variable: &str) -> bool {
 }
 
 pub async fn entrypoint<P>(
-    program_files: &[&str],
-    program_id: &Pubkey,
-    integration_test_program_id: &Pubkey,
-    tests: &[P],
+    programs: &[(&str, &Pubkey)],
+    tests: &[(BoomerangTestClientConfig, &[P])],
 ) where
-    P: Fn(String, Pubkey, bool) -> Trial,
+    P: Fn(BoomerangTestClientConfig, bool) -> Trial,
 {
     let integration = parse_env("INTEGRATION");
     let migration = parse_env("MIGRATION");
@@ -35,14 +33,17 @@ pub async fn entrypoint<P>(
 
     if program {
         // Run the program tests
-        let program_test = BoomerangProgramTest::new_with_banks(program_files, program_id, tests);
+        let program_files = programs
+            .iter()
+            .map(|(program_file, _)| *program_file)
+            .collect::<Vec<_>>();
+        let program_test = BoomerangProgramTest::new_with_banks(&program_files, tests);
         program_test.run();
     }
 
     if integration {
         // Run the integration tests
-        let integration_test =
-            BoomerangIntegrationTest::new(program_files, integration_test_program_id, tests);
+        let integration_test = BoomerangIntegrationTest::new(programs, tests);
         integration_test.run();
     }
 

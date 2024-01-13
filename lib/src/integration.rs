@@ -4,6 +4,7 @@ use {
         program::{map_iteration, BoomerangProgramTestIteration},
     },
     libtest_mimic::Trial,
+    solana_boomerang_client::BoomerangTestClientConfig,
     solana_boomerang_test_validator::{
         start_options::{AddressOrKeypair, BoomerangTestValidatorStartOptions},
         BoomerangTestValidator,
@@ -29,28 +30,29 @@ pub struct BoomerangIntegrationTest {
     test_validator_start_options: Vec<BoomerangTestValidatorStartOptions>,
 }
 impl BoomerangIntegrationTest {
-    pub fn new<P>(program_files: &[&str], program_id: &Pubkey, tests: &[P]) -> Self
+    pub fn new<P>(programs: &[(&str, &Pubkey)], tests: &[(BoomerangTestClientConfig, &[P])]) -> Self
     where
-        P: Fn(String, Pubkey, bool) -> Trial,
+        P: Fn(BoomerangTestClientConfig, bool) -> Trial,
     {
         let mut iterations = vec![];
 
         let mut upgradeable_bpf_programs = vec![];
 
-        for program_file in program_files {
+        for program in programs {
+            let (program_file, integration_test_program_id) = program;
+
             // Store the test iteration
             iterations.push(map_iteration(
                 program_file,
-                program_id,
                 tests,
                 /* use_banks */ false,
             ));
 
             // Add the upgradeable program to the startup options
             upgradeable_bpf_programs.push(BoomerangTestValidatorStartOptions::UpgradeableProgram {
-                address_or_keypair: AddressOrKeypair::Address(*program_id),
+                address_or_keypair: AddressOrKeypair::Address(**integration_test_program_id),
                 so_file_path: get_program_so_path(program_file),
-                upgrade_authority: AddressOrKeypair::Address(*program_id), // For now
+                upgrade_authority: AddressOrKeypair::Address(**integration_test_program_id), // For now
             });
         }
 
