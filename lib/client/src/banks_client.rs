@@ -1,9 +1,7 @@
 use {
     crate::interface::{BoomerangTestClient, BoomerangTestClientConfig},
     async_trait::async_trait,
-    solana_program_test::{
-        BanksClient, ProgramTest, ProgramTestBanksClientExt, ProgramTestContext,
-    },
+    solana_program_test::{ProgramTest, ProgramTestBanksClientExt, ProgramTestContext},
     solana_sdk::{
         account::Account,
         hash::Hash,
@@ -24,9 +22,7 @@ fn overwrite_slot_hashes_with_slots(context: &ProgramTestContext, slots: &[Slot]
 }
 
 pub struct BoomerangBanksClient {
-    banks_client: BanksClient,
-    fee_payer: Keypair,
-    latest_blockhash: Hash,
+    program_test_context: ProgramTestContext,
 }
 
 #[async_trait]
@@ -36,51 +32,46 @@ impl BoomerangTestClient for BoomerangBanksClient {
         config.features_disabled.iter().for_each(|feature| {
             program_test.deactivate_feature(*feature);
         });
-        let context = program_test.start_with_context().await;
-        overwrite_slot_hashes_with_slots(&context, &config.advance_slot_hashes);
-        let banks_client = context.banks_client;
-        let fee_payer = context.payer;
-        let latest_blockhash = context.last_blockhash;
+        let program_test_context = program_test.start_with_context().await;
+        overwrite_slot_hashes_with_slots(&program_test_context, &config.advance_slot_hashes);
         Self {
-            banks_client,
-            fee_payer,
-            latest_blockhash,
+            program_test_context,
         }
     }
 
     fn fee_payer(&self) -> Keypair {
-        self.fee_payer.insecure_clone()
+        self.program_test_context.payer.insecure_clone()
     }
 
     fn last_blockhash(&self) -> Hash {
-        self.latest_blockhash
+        self.program_test_context.last_blockhash
     }
 
     async fn new_latest_blockhash(&mut self) -> Hash {
-        let new_blockhash = self
+        self.program_test_context
             .banks_client
-            .get_new_latest_blockhash(&self.latest_blockhash)
+            .get_new_latest_blockhash(&self.program_test_context.last_blockhash)
             .await
-            .unwrap();
-        self.latest_blockhash = new_blockhash;
-        new_blockhash
+            .unwrap()
     }
 
     async fn process_transaction(
         &mut self,
         transaction: Transaction,
     ) -> Result<(), Option<TransactionError>> {
-        self.banks_client
+        self.program_test_context
+            .banks_client
             .process_transaction(transaction)
             .await
-            .map_err(|_| None)
+            .map_err(|err| Some(err.unwrap()))
     }
 
     async fn get_account(
         &mut self,
         pubkey: &Pubkey,
     ) -> Result<Option<Account>, Box<dyn std::error::Error>> {
-        self.banks_client
+        self.program_test_context
+            .banks_client
             .get_account(*pubkey)
             .await
             .map_err(|err| err.into())
