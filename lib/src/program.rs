@@ -3,7 +3,17 @@ use {
     libtest_mimic::{Arguments, Trial},
     solana_boomerang_client::BoomerangTestClientConfig,
     solana_sdk::pubkey::Pubkey,
+    std::str::FromStr,
 };
+
+fn setup_config_for_test(
+    config: &mut BoomerangTestClientConfig,
+    program_file: &str,
+    program_id: &Pubkey,
+) {
+    config.program_file = program_file.to_string();
+    config.program_id = *program_id;
+}
 
 pub struct BoomerangProgramTestChunk {
     args: Arguments,
@@ -23,7 +33,6 @@ impl BoomerangProgramTestChunk {
 pub struct BoomerangProgramTestIteration {
     chunks: Vec<BoomerangProgramTestChunk>,
     program_file: String,
-    _program_id: Pubkey, // We'll need this later
 }
 impl BoomerangProgramTestIteration {
     pub fn chunks(self) -> Vec<BoomerangProgramTestChunk> {
@@ -46,14 +55,19 @@ pub fn map_iteration(
     tests: BoomerangTests<'_>,
     use_banks: bool,
 ) -> BoomerangProgramTestIteration {
-    let (file, _id) = program;
+    let (file, id) = program;
     let program_file = file.to_string();
+    let program_id = Pubkey::from_str(*id).unwrap();
     let chunks = tests
         .iter()
         .map(|(config, test_funcs)| {
             let trials = test_funcs
                 .iter()
-                .map(|test_func| test_func(config.clone(), use_banks))
+                .map(|test_func| {
+                    let mut config = config.clone();
+                    setup_config_for_test(&mut config, &program_file, &program_id);
+                    test_func(config, use_banks)
+                })
                 .collect();
             BoomerangProgramTestChunk {
                 args: Arguments::from_args(),
@@ -65,7 +79,6 @@ pub fn map_iteration(
     BoomerangProgramTestIteration {
         chunks,
         program_file,
-        _program_id: Pubkey::new_unique(), // TODO: Might try to replace `Pubkey` in the main lib
     }
 }
 

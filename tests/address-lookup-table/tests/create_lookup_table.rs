@@ -14,14 +14,12 @@ use {
     std::borrow::Cow,
 };
 
-pub const TEST_RECENT_SLOT: Slot = 123;
-
 pub async fn test_create_lookup_table_idempotent(mut client: BoomerangClient) {
     let authority_address = Pubkey::new_unique();
     let payer_pubkey = client.fee_payer().pubkey();
 
     let (mut create_lookup_table_ix, lookup_table_address) =
-        create_lookup_table(authority_address, payer_pubkey, TEST_RECENT_SLOT);
+        create_lookup_table(authority_address, payer_pubkey, 123);
 
     // TODO: How to get this out?
     create_lookup_table_ix.program_id = client.program_id();
@@ -69,7 +67,7 @@ pub async fn test_create_lookup_table_not_idempotent(mut client: BoomerangClient
     let authority_address = authority_keypair.pubkey();
 
     let (mut create_lookup_table_ix, ..) =
-        create_lookup_table_signed(authority_address, payer_pubkey, TEST_RECENT_SLOT);
+        create_lookup_table_signed(authority_address, payer_pubkey, 123);
 
     // TODO: How to get this out?
     create_lookup_table_ix.program_id = client.program_id();
@@ -104,7 +102,7 @@ pub async fn test_create_lookup_table_use_payer_as_authority(mut client: Boomera
     let authority_address = payer_pubkey;
 
     let (mut create_lookup_table_ix, ..) =
-        create_lookup_table_signed(authority_address, payer_pubkey, TEST_RECENT_SLOT);
+        create_lookup_table_signed(authority_address, payer_pubkey, 123);
 
     // TODO: How to get this out?
     create_lookup_table_ix.program_id = client.program_id();
@@ -159,7 +157,7 @@ pub async fn test_create_lookup_table_pda_mismatch(mut client: BoomerangClient) 
     let payer = client.fee_payer();
     let authority_address = Pubkey::new_unique();
 
-    let mut ix = create_lookup_table(authority_address, payer.pubkey(), TEST_RECENT_SLOT).0;
+    let mut ix = create_lookup_table(authority_address, payer.pubkey(), 123).0;
     ix.accounts[0].pubkey = Pubkey::new_unique();
 
     // TODO: How to get this out?

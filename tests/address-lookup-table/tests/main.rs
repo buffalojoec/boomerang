@@ -1,3 +1,5 @@
+#![cfg(feature = "test-sbf")]
+
 mod create_lookup_table;
 
 // ======================= MACRO GENERATED ======================= //
@@ -93,20 +95,9 @@ async fn main() {
         ),
     ];
 
-    // ======================= ELIMINATE ======================= //
-
-    let program_file = "solana_address_lookup_table_program.so".to_string();
-    let program_id = solana_program::address_lookup_table::program::id();
-
-    // ======================= ELIMINATE (END) ======================= //
-
     let tests: solana_boomerang::BoomerangTests = &[
         (
             solana_boomerang::client::BoomerangTestClientConfig {
-                // ======= ELIMINATE ======= //
-                program_file: program_file.clone(),
-                program_id,
-                // ======= ELIMINATE (END) ======= //
                 warp_slot: 123,
                 ..solana_boomerang::client::BoomerangTestClientConfig::default()
             },
@@ -118,10 +109,6 @@ async fn main() {
         ),
         (
             solana_boomerang::client::BoomerangTestClientConfig {
-                // ======= ELIMINATE ======= //
-                program_file: program_file.clone(),
-                program_id,
-                // ======= ELIMINATE (END) ======= //
                 features_disabled: vec![
                     solana_sdk::feature_set::relax_authority_signer_check_for_lookup_table_creation::id(),
                 ],
@@ -134,10 +121,6 @@ async fn main() {
         ),
         (
             solana_boomerang::client::BoomerangTestClientConfig {
-                // ======= ELIMINATE ======= //
-                program_file: program_file.clone(),
-                program_id,
-                // ======= ELIMINATE (END) ======= //
                 features_disabled: vec![
                     solana_sdk::feature_set::relax_authority_signer_check_for_lookup_table_creation::id(),
                 ],
@@ -149,10 +132,6 @@ async fn main() {
         ),
         (
             solana_boomerang::client::BoomerangTestClientConfig {
-                // ======= ELIMINATE ======= //
-                program_file: program_file.clone(),
-                program_id,
-                // ======= ELIMINATE (END) ======= //
                 ..solana_boomerang::client::BoomerangTestClientConfig::default()
             },
             &[
