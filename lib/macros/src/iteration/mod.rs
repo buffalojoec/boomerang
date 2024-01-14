@@ -73,20 +73,20 @@ impl From<&Iteration> for proc_macro2::TokenStream {
         let config = &ast.config;
         let trials = &ast.trials;
 
-        let _config_tokens = config.to_token_stream();
-        let _all_generated_trial_names = trials
+        let config_tokens = config.to_token_stream();
+        let all_generated_trial_names = trials
             .iter()
             .map(|trial| trial.generated_trial_name())
             .collect::<Vec<_>>();
 
-        // quote::quote! {
-        //     (
-        //         #config_tokens,
-        //         &[
-        //             #(#all_generated_trial_names),*
-        //         ]
-        //     )
-        // }
+        let _ = quote::quote! {
+            (
+                #config_tokens,
+                &[
+                    #( #all_generated_trial_names ),*
+                ]
+            )
+        };
         quote::quote! {}
     }
 }

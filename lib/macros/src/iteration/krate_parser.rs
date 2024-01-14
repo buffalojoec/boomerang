@@ -164,9 +164,9 @@ impl CrateContext {
         self.modules.iter().flat_map(|(_, ctx)| ctx.functions())
     }
 
-    fn parse(root: impl AsRef<std::path::Path>) -> Result<Self, anyhow::Error> {
+    fn parse(root: &std::path::Path) -> Result<Self, anyhow::Error> {
         Ok(CrateContext {
-            modules: ParsedModule::parse_recursive(root.as_ref())?,
+            modules: ParsedModule::parse_recursive(root)?,
         })
     }
 }
@@ -181,8 +181,12 @@ pub fn get_parsed_crate_context() -> CrateContext {
         .join("address-lookup-table")
         .join("tests")
         .join("macro-test.rs");
-    CrateContext::parse(root).expect(
-        "Failed to detect `tests/main.rs`. \
-            Make sure your `#[boomerang::main]` function is in `tests/main.rs`",
+    CrateContext::parse(&root).expect(
+        &format!(
+            "Failed to detect `tests/main.rs`. \
+            Make sure your `#[boomerang::main]` function is in `tests/main.rs`\n\
+            Root: {}",
+            root.display()
+        )
     )
 }

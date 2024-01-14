@@ -1,7 +1,9 @@
+mod create_lookup_table;
+
 use solana_boomerang::boomerang;
 
 #[boomerang::test(
-    deactivate_features = [
+    features_disabled = [
         feature_set::relax_authority_signer_check_for_lookup_table_creation::id,
     ],
     warp_slot = 150,

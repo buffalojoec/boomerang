@@ -45,7 +45,7 @@ impl From<&Entrypoint> for proc_macro2::TokenStream {
 
         let test_iterations = crate::iteration::Iteration::parse_iterations().unwrap();
 
-        let _all_programs_tokens = programs
+        let all_programs_tokens = programs
             .iter()
             .map(|(name, pubkey)| {
                 quote::quote! {
@@ -54,7 +54,7 @@ impl From<&Entrypoint> for proc_macro2::TokenStream {
             })
             .collect::<Vec<_>>();
 
-        let _all_program_tests_args_tokens = program_tests
+        let all_program_tests_args_tokens = program_tests
             .iter()
             .map(|i| {
                 quote::quote! {
@@ -63,7 +63,7 @@ impl From<&Entrypoint> for proc_macro2::TokenStream {
             })
             .collect::<Vec<_>>();
 
-        let _all_integration_tests_args_tokens = integration_tests
+        let all_integration_tests_args_tokens = integration_tests
             .iter()
             .map(|i| {
                 quote::quote! {
@@ -72,7 +72,7 @@ impl From<&Entrypoint> for proc_macro2::TokenStream {
             })
             .collect::<Vec<_>>();
 
-        let _all_migration_tests_args_tokens = migration_tests
+        let all_migration_tests_args_tokens = migration_tests
             .iter()
             .map(|(name, file)| {
                 quote::quote! {
@@ -81,53 +81,53 @@ impl From<&Entrypoint> for proc_macro2::TokenStream {
             })
             .collect::<Vec<_>>();
 
-        let _all_trials_tokens = test_iterations
+        let all_trials_tokens = test_iterations
             .iter()
             .map(|i| i.trials().iter().map(|trial| trial.to_token_stream()))
             .flatten()
             .collect::<Vec<_>>();
 
-        let _all_iterations_tokens = test_iterations
+        let all_iterations_tokens = test_iterations
             .iter()
             .map(|i| i.to_token_stream())
             .collect::<Vec<_>>();
 
-        // quote::quote! {
-        //     use solana_boomerang::tokio;
+        let _ = quote::quote! {
+            use solana_boomerang::tokio;
 
-        //     #(# all_trials_tokens)*
+            #(# all_trials_tokens)*
 
-        //     #[tokio::main]
-        //     async fn main() {
-        //         let programs = &[
-        //             #(# all_programs_tokens),*
-        //         ];
+            #[tokio::main]
+            async fn main() {
+                let programs = &[
+                    #( #all_programs_tokens ),*
+                ];
 
-        //         let program_tests = &[
-        //             #(# all_program_tests_args_tokens),*
-        //         ];
+                let program_tests = &[
+                    #( #all_program_tests_args_tokens ),*
+                ];
 
-        //         let integration_tests = &[
-        //             #(# all_integration_tests_args_tokens),*
-        //         ];
+                let integration_tests = &[
+                    #( #all_integration_tests_args_tokens ),*
+                ];
 
-        //         let migration_tests = &[
-        //             #(# all_migration_tests_args_tokens),*
-        //         ];
+                let migration_tests = &[
+                    #( #all_migration_tests_args_tokens ),*
+                ];
 
-        //         let tests: solana_boomerang::BoomerangTests = &[
-        //             #(# all_iterations_tokens),*
-        //         ];
+                let tests: solana_boomerang::BoomerangTests = &[
+                    #( #all_iterations_tokens ),*
+                ];
 
-        //         solana_boomerang::entrypoint(
-        //             programs,
-        //             program_tests,
-        //             integration_tests,
-        //             migration_tests,
-        //             tests,
-        //         ).await;
-        //     }
-        // }
+                solana_boomerang::entrypoint(
+                    programs,
+                    program_tests,
+                    integration_tests,
+                    migration_tests,
+                    tests,
+                ).await;
+            }
+        };
         quote::quote! {}
     }
 }

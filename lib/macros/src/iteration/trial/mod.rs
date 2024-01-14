@@ -33,32 +33,32 @@ impl quote::ToTokens for Trial {
 
 impl From<&Trial> for proc_macro2::TokenStream {
     fn from(ast: &Trial) -> Self {
-        let _function_full_path = &ast.function_full_path;
-        let _generated_trial_name = &ast.generated_trial_name;
+        let function_full_path = &ast.function_full_path;
+        let generated_trial_name = &ast.generated_trial_name;
 
-        // quote::quote! {
-        //     fn $generated_trial_name (
-        //         config: solana_boomerang::client::BoomerangTestClientConfig,
-        //         use_banks: bool,
-        //     ) -> solana_boomerang::libtest_mimic::Trial {
-        //         solana_boomerang::boomerang_trial!(
-        //             $function_full_path
-        //         )(config, use_banks)
-        //     }
-        // }
+        let _ = quote::quote! {
+            fn #generated_trial_name (
+                config: solana_boomerang::client::BoomerangTestClientConfig,
+                use_banks: bool,
+            ) -> solana_boomerang::libtest_mimic::Trial {
+                solana_boomerang::boomerang_trial!(
+                    #function_full_path
+                )(config, use_banks)
+            }
+        };
         quote::quote! {}
     }
 }
 
 pub struct TrialConfig {
-    deactivate_features: Vec<String>,
+    features_disabled: Vec<String>,
     warp_slot: u64,
 }
 
 impl Default for TrialConfig {
     fn default() -> Self {
         Self {
-            deactivate_features: Vec::new(),
+            features_disabled: Vec::new(),
             warp_slot: 0,
         }
     }
@@ -66,7 +66,7 @@ impl Default for TrialConfig {
 
 impl PartialEq for TrialConfig {
     fn eq(&self, other: &Self) -> bool {
-        self.deactivate_features == other.deactivate_features && self.warp_slot == other.warp_slot
+        self.features_disabled == other.features_disabled && self.warp_slot == other.warp_slot
     }
 }
 
@@ -84,20 +84,20 @@ impl quote::ToTokens for TrialConfig {
 
 impl From<&TrialConfig> for proc_macro2::TokenStream {
     fn from(ast: &TrialConfig) -> Self {
-        let _deactivate_features = &ast.deactivate_features;
-        let _warp_slot = ast.warp_slot;
+        let features_disabled = &ast.features_disabled;
+        let warp_slot = ast.warp_slot;
 
-        // quote::quote! {
-        //     solana_boomerang::client::BoomerangTestClientConfig {
-        //         deactivate_features: vec![
-        //             #(#deactivate_features),*
-        //         ],
-        //         program_file: program_file.clone(),
-        //         program_id,
-        //         warp_slot: #warp_slot,
-        //         ..BoomerangClientTestConfig::default()
-        //     }
-        // }
+        let _ = quote::quote! {
+            solana_boomerang::client::BoomerangTestClientConfig {
+                features_disabled: vec![
+                    #( #features_disabled ),*
+                ],
+                program_file: program_file.clone(),
+                program_id,
+                warp_slot: #warp_slot,
+                ..solana_boomerang::client::BoomerangClientTestConfig::default()
+            }
+        };
         quote::quote! {}
     }
 }

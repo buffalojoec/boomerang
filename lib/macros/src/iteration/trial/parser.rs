@@ -43,7 +43,7 @@ impl syn::parse::Parse for ParsedTrialConfigArg {
         if input.peek(syn::Ident) {
             let ident = input.parse::<syn::Ident>()?;
             match ident.to_string().as_str() {
-                "deactivate_features" => {
+                "features_disabled" => {
                     let arg = ParsedDeactivateFeaturesArg::parse(input)?;
                     Ok(Self::DeactivateFeatures(arg))
                 }
@@ -79,14 +79,14 @@ pub fn parse_trial_config(
 
     let input = ParsedTrialConfigArgs::parse(input)?;
 
-    let mut deactivate_features: Vec<String> = Vec::new();
+    let mut features_disabled: Vec<String> = Vec::new();
     let mut warp_slot: u64 = 0;
 
     for arg in input.args {
         match arg {
-            ParsedTrialConfigArg::DeactivateFeatures(deactivate_features_arg) => {
-                deactivate_features_arg.value.iter().for_each(|arg| {
-                    deactivate_features.push(arg.to_token_stream().to_string());
+            ParsedTrialConfigArg::DeactivateFeatures(features_disabled_arg) => {
+                features_disabled_arg.value.iter().for_each(|arg| {
+                    features_disabled.push(arg.to_token_stream().to_string());
                 });
             }
             ParsedTrialConfigArg::WarpSlot(warp_slot_arg) => {
@@ -96,7 +96,7 @@ pub fn parse_trial_config(
     }
 
     Ok(crate::iteration::trial::TrialConfig {
-        deactivate_features,
+        features_disabled,
         warp_slot,
     })
 }
