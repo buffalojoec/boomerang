@@ -83,8 +83,7 @@ impl From<&Entrypoint> for proc_macro2::TokenStream {
 
         let all_trials_tokens = test_iterations
             .iter()
-            .map(|i| i.trials().iter().map(|trial| trial.to_token_stream()))
-            .flatten()
+            .flat_map(|i| i.trials().iter().map(|trial| trial.to_token_stream()))
             .collect::<Vec<_>>();
 
         let all_iterations_tokens = test_iterations

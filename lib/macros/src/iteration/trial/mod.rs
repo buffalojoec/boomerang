@@ -20,11 +20,11 @@ impl From<&(&String, &syn::ItemFn)> for Trial {
             // declared in the test root, in our case `tests/main.rs` (as required by
             // Boomerang).
             item_fn.0.chars().skip(2).collect::<String>(),
-            item_fn.1.sig.ident.to_string(),
+            item_fn.1.sig.ident,
         ))
         .unwrap();
         let generated_trial_name = syn::Ident::new(
-            &format!("boomerang_{}", item_fn.1.sig.ident.to_string()),
+            &format!("boomerang_{}", item_fn.1.sig.ident),
             item_fn.1.sig.ident.span(),
         );
         Self {
@@ -58,19 +58,13 @@ impl From<&Trial> for proc_macro2::TokenStream {
     }
 }
 
+#[derive(Default)]
 pub struct TrialConfig {
     features_disabled: Vec<syn::Path>,
     warp_slot: u64,
 }
 
-impl Default for TrialConfig {
-    fn default() -> Self {
-        Self {
-            features_disabled: Vec::new(),
-            warp_slot: 0,
-        }
-    }
-}
+
 
 impl PartialEq for TrialConfig {
     fn eq(&self, other: &Self) -> bool {

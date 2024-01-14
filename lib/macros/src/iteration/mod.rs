@@ -36,7 +36,7 @@ impl Iteration {
     }
 
     pub fn parse_iterations() -> syn::Result<Vec<Self>> {
-        Ok(crate::krate_parser::get_parsed_crate_context()
+        crate::krate_parser::get_parsed_crate_context()
             .functions()
             .try_fold(Vec::<Iteration>::new(), |mut acc, func| {
                 try_parse_trial_with_config(func).map(|trial| {
@@ -53,7 +53,7 @@ impl Iteration {
                     }
                     acc
                 })
-            })?)
+            })
     }
 }
 

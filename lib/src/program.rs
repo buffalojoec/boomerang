@@ -73,7 +73,7 @@ impl BoomerangProgramTestIteration {
     pub fn new(program: &(&str, &str), tests: BoomerangTests<'_>, use_banks: bool) -> Self {
         let (file, id) = program;
         let program_file = file.to_string();
-        let program_id = Pubkey::from_str(*id).unwrap();
+        let program_id = Pubkey::from_str(id).unwrap();
 
         let chunks = tests
             .iter()
@@ -102,8 +102,7 @@ impl BoomerangProgramTestIteration {
         let trials = self
             .chunks
             .into_iter()
-            .map(|chunk| chunk.trials)
-            .flatten()
+            .flat_map(|chunk| chunk.trials)
             .collect();
         libtest_mimic::run(&args, trials).exit_if_failed();
     }

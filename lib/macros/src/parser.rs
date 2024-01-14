@@ -57,7 +57,7 @@ impl syn::parse::Parse for ParsedStringTupleItem {
 
 pub fn parse_singleton_arg<T: syn::parse::Parse>(input: syn::parse::ParseStream) -> syn::Result<T> {
     let _equals_sign = input.parse::<syn::Token![=]>()?;
-    Ok(input.parse::<T>()?)
+    input.parse::<T>()
 }
 
 pub fn parse_bracketed_list_arg<T: syn::parse::Parse>(
