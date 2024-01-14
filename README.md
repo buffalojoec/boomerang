@@ -8,8 +8,8 @@ It's crucial to cluster health to have the proper test harness to ensure these
 migrations are successful.
 
 Boomerang can perform the following tests on *any* Solana program:
-- **Program tests:** Executing program tests using `solana-program-tests`
-  against a Banks client.
+- **Program tests:** Executing program tests using `solana-program-test`
+  against a `BanksClient`.
 - **Integration tests:** Executing test suites against a live test validator.
 - **Migration tests:** Testing one program's implementation against a local
   validator, then using the Bank's migration module (SIMD 0088) to migrate to
