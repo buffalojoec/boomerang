@@ -2,15 +2,15 @@ mod parser;
 
 pub struct Entrypoint {
     programs: Vec<(String, String)>,
-    program_tests: bool,
-    integration_tests: bool,
+    program_tests: Vec<String>,
+    integration_tests: Vec<String>,
     migration_tests: Vec<(String, String)>,
 }
 impl Entrypoint {
     pub fn new(
         programs: Vec<(String, String)>,
-        program_tests: bool,
-        integration_tests: bool,
+        program_tests: Vec<String>,
+        integration_tests: Vec<String>,
         migration_tests: Vec<(String, String)>,
     ) -> Self {
         Self {
@@ -39,17 +39,35 @@ impl From<&Entrypoint> for proc_macro2::TokenStream {
         use quote::ToTokens;
 
         let programs = &ast.programs;
-        let _program_tests = ast.program_tests;
-        let _integration_tests = ast.integration_tests;
+        let program_tests = &ast.program_tests;
+        let integration_tests = &ast.integration_tests;
         let migration_tests = &ast.migration_tests;
 
         let test_iterations = crate::iteration::Iteration::parse_iterations().unwrap();
 
         let _all_programs_tokens = programs
             .iter()
-            .map(|(name, file)| {
+            .map(|(name, pubkey)| {
                 quote::quote! {
-                    (#name, #file)
+                    (#name, #pubkey)
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let _all_program_tests_args_tokens = program_tests
+            .iter()
+            .map(|i| {
+                quote::quote! {
+                    #i
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let _all_integration_tests_args_tokens = integration_tests
+            .iter()
+            .map(|i| {
+                quote::quote! {
+                    #i
                 }
             })
             .collect::<Vec<_>>();
@@ -75,24 +93,38 @@ impl From<&Entrypoint> for proc_macro2::TokenStream {
             .collect::<Vec<_>>();
 
         // quote::quote! {
+        //     use solana_boomerang::tokio;
+
         //     #(# all_trials_tokens)*
 
-        //     #[solana_boomerang::tokio::main]
+        //     #[tokio::main]
         //     async fn main() {
         //         let programs = &[
         //             #(# all_programs_tokens),*
         //         ];
+
+        //         let program_tests = &[
+        //             #(# all_program_tests_args_tokens),*
+        //         ];
+
+        //         let integration_tests = &[
+        //             #(# all_integration_tests_args_tokens),*
+        //         ];
+
+        //         let migration_tests = &[
+        //             #(# all_migration_tests_args_tokens),*
+        //         ];
+
         //         let tests: solana_boomerang::BoomerangTests = &[
         //             #(# all_iterations_tokens),*
         //         ];
+
         //         solana_boomerang::entrypoint(
         //             programs,
+        //             program_tests,
+        //             integration_tests,
+        //             migration_tests,
         //             tests,
-        //             #program_tests,
-        //             #integration_tests,
-        //             &[
-        //                 #(# all_migration_tests_args_tokens),*
-        //             ],
         //         ).await;
         //     }
         // }

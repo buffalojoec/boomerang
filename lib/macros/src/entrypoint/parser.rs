@@ -1,29 +1,30 @@
-struct ParsedProgramItem(syn::LitStr, syn::LitStr);
-impl syn::parse::Parse for ParsedProgramItem {
+struct ParsedStringItem(syn::LitStr);
+impl syn::parse::Parse for ParsedStringItem {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let val: syn::LitStr = input.parse()?;
+        Ok(Self(val))
+    }
+}
+impl ParsedStringItem {
+    fn parse_list(input: syn::parse::ParseStream) -> syn::Result<Vec<Self>> {
+        use syn::parse::Parse;
         let content;
-        syn::parenthesized!(content in input);
-        let name: syn::LitStr = content.parse()?;
-        content.parse::<syn::Token![,]>()?;
-        let id: syn::LitStr = content.parse()?;
-        Ok(Self(name, id))
+        syn::bracketed!(content in input);
+        Ok(content
+            .parse_terminated(Self::parse, syn::Token![,])?
+            .into_iter()
+            .collect::<Vec<_>>())
     }
 }
 
-struct ParsedProgramsArg {
+struct ParsedStringListArg {
     _equals_sign: syn::Token![=],
-    value: Vec<ParsedProgramItem>,
+    value: Vec<ParsedStringItem>,
 }
-impl syn::parse::Parse for ParsedProgramsArg {
+impl syn::parse::Parse for ParsedStringListArg {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let _equals_sign = input.parse::<syn::Token![=]>()?;
-        let content;
-        syn::bracketed!(content in input);
-        let value = content
-            .parse_terminated(ParsedProgramItem::parse, syn::Token![,])?
-            .into_iter()
-            .collect();
-
+        let value = ParsedStringItem::parse_list(input)?;
         Ok(Self {
             _equals_sign,
             value,
@@ -31,47 +32,37 @@ impl syn::parse::Parse for ParsedProgramsArg {
     }
 }
 
-struct ParsedTestArg {
-    _equals_sign: syn::Token![=],
-    value: syn::LitBool,
-}
-impl syn::parse::Parse for ParsedTestArg {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let _equals_sign = input.parse::<syn::Token![=]>()?;
-        let value = input.parse::<syn::LitBool>()?;
-        Ok(Self {
-            _equals_sign,
-            value,
-        })
-    }
-}
-
-struct ParsedMigrationItem(syn::LitStr, syn::Path);
-impl syn::parse::Parse for ParsedMigrationItem {
+struct ParsedStringTupleItem(syn::LitStr, syn::LitStr);
+impl syn::parse::Parse for ParsedStringTupleItem {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let content;
         syn::parenthesized!(content in input);
-        let name: syn::LitStr = content.parse()?;
+        let val1: syn::LitStr = content.parse()?;
         content.parse::<syn::Token![,]>()?;
-        let id: syn::Path = content.parse()?;
-        Ok(Self(name, id))
+        let val2: syn::LitStr = content.parse()?;
+        Ok(Self(val1, val2))
+    }
+}
+impl ParsedStringTupleItem {
+    fn parse_list(input: syn::parse::ParseStream) -> syn::Result<Vec<Self>> {
+        use syn::parse::Parse;
+        let content;
+        syn::bracketed!(content in input);
+        Ok(content
+            .parse_terminated(Self::parse, syn::Token![,])?
+            .into_iter()
+            .collect::<Vec<_>>())
     }
 }
 
-struct ParsedMigrationTestArg {
+struct ParsedStringTupleListArg {
     _equals_sign: syn::Token![=],
-    value: Vec<ParsedMigrationItem>,
+    value: Vec<ParsedStringTupleItem>,
 }
-impl syn::parse::Parse for ParsedMigrationTestArg {
+impl syn::parse::Parse for ParsedStringTupleListArg {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let _equals_sign = input.parse::<syn::Token![=]>()?;
-        let content;
-        syn::bracketed!(content in input);
-        let value = content
-            .parse_terminated(ParsedMigrationItem::parse, syn::Token![,])?
-            .into_iter()
-            .collect();
-
+        let value = ParsedStringTupleItem::parse_list(input)?;
         Ok(Self {
             _equals_sign,
             value,
@@ -80,10 +71,10 @@ impl syn::parse::Parse for ParsedMigrationTestArg {
 }
 
 enum ParsedEntrypointArg {
-    Programs(ParsedProgramsArg),
-    ProgramTests(ParsedTestArg),
-    IntegrationTests(ParsedTestArg),
-    MigrationTests(ParsedMigrationTestArg),
+    Programs(ParsedStringTupleListArg),
+    ProgramTests(ParsedStringListArg),
+    IntegrationTests(ParsedStringListArg),
+    MigrationTests(ParsedStringTupleListArg),
 }
 impl syn::parse::Parse for ParsedEntrypointArg {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
@@ -91,19 +82,19 @@ impl syn::parse::Parse for ParsedEntrypointArg {
             let ident = input.parse::<syn::Ident>()?;
             match ident.to_string().as_str() {
                 "programs" => {
-                    let arg = ParsedProgramsArg::parse(input)?;
+                    let arg = ParsedStringTupleListArg::parse(input)?;
                     Ok(Self::Programs(arg))
                 }
                 "program_tests" => {
-                    let arg = ParsedTestArg::parse(input)?;
+                    let arg = ParsedStringListArg::parse(input)?;
                     Ok(Self::ProgramTests(arg))
                 }
                 "integration_tests" => {
-                    let arg = ParsedTestArg::parse(input)?;
+                    let arg = ParsedStringListArg::parse(input)?;
                     Ok(Self::IntegrationTests(arg))
                 }
                 "migration_tests" => {
-                    let arg = ParsedMigrationTestArg::parse(input)?;
+                    let arg = ParsedStringTupleListArg::parse(input)?;
                     Ok(Self::MigrationTests(arg))
                 }
                 _ => Err(syn::Error::new(input.span(), "Unknown argument")),
@@ -130,13 +121,13 @@ impl syn::parse::Parse for ParsedEntrypointArgs {
 pub fn parse_entrypoint(
     input: syn::parse::ParseStream,
 ) -> syn::Result<crate::entrypoint::Entrypoint> {
-    use {quote::ToTokens, syn::parse::Parse};
+    use syn::parse::Parse;
 
     let input = ParsedEntrypointArgs::parse(input)?;
 
     let mut programs: Vec<(String, String)> = Vec::new();
-    let mut program_tests = false;
-    let mut integration_tests = false;
+    let mut program_tests: Vec<String> = Vec::new();
+    let mut integration_tests: Vec<String> = Vec::new();
     let mut migration_tests: Vec<(String, String)> = Vec::new();
 
     for arg in input.args {
@@ -146,15 +137,19 @@ pub fn parse_entrypoint(
                     programs.push((arg.0.value(), arg.1.value()));
                 });
             }
-            ParsedEntrypointArg::ProgramTests(arg) => {
-                program_tests = arg.value.value;
+            ParsedEntrypointArg::ProgramTests(program_tests_arg) => {
+                program_tests_arg.value.iter().for_each(|arg| {
+                    program_tests.push(arg.0.value());
+                });
             }
-            ParsedEntrypointArg::IntegrationTests(arg) => {
-                integration_tests = arg.value.value;
+            ParsedEntrypointArg::IntegrationTests(integration_tests_arg) => {
+                integration_tests_arg.value.iter().for_each(|arg| {
+                    integration_tests.push(arg.0.value());
+                });
             }
             ParsedEntrypointArg::MigrationTests(migration_tests_arg) => {
                 migration_tests_arg.value.iter().for_each(|arg| {
-                    migration_tests.push((arg.0.value(), arg.1.to_token_stream().to_string()));
+                    migration_tests.push((arg.0.value(), arg.1.value()));
                 });
             }
         }

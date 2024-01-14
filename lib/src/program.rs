@@ -2,6 +2,7 @@ use {
     crate::BoomerangTests,
     libtest_mimic::{Arguments, Trial},
     solana_boomerang_client::BoomerangTestClientConfig,
+    solana_sdk::pubkey::Pubkey,
 };
 
 pub struct BoomerangProgramTestChunk {
@@ -22,6 +23,7 @@ impl BoomerangProgramTestChunk {
 pub struct BoomerangProgramTestIteration {
     chunks: Vec<BoomerangProgramTestChunk>,
     program_file: String,
+    _program_id: Pubkey, // We'll need this later
 }
 impl BoomerangProgramTestIteration {
     pub fn chunks(self) -> Vec<BoomerangProgramTestChunk> {
@@ -40,11 +42,12 @@ impl BoomerangProgramTestIteration {
 }
 
 pub fn map_iteration(
-    program_file: &str,
+    program: &(&str, &str),
     tests: BoomerangTests<'_>,
     use_banks: bool,
 ) -> BoomerangProgramTestIteration {
-    let program_file = program_file.to_string();
+    let (file, _id) = program;
+    let program_file = file.to_string();
     let chunks = tests
         .iter()
         .map(|(config, test_funcs)| {
@@ -62,6 +65,7 @@ pub fn map_iteration(
     BoomerangProgramTestIteration {
         chunks,
         program_file,
+        _program_id: Pubkey::new_unique(), // TODO: Might try to replace `Pubkey` in the main lib
     }
 }
 
@@ -69,21 +73,21 @@ pub struct BoomerangProgramTest {
     iterations: Vec<BoomerangProgramTestIteration>,
 }
 impl BoomerangProgramTest {
-    fn new(program_files: &[&str], tests: BoomerangTests<'_>, use_banks: bool) -> Self {
-        let iterations = program_files
+    fn new(programs: &[(&str, &str)], tests: BoomerangTests<'_>, use_banks: bool) -> Self {
+        let iterations = programs
             .iter()
-            .map(|program_file| map_iteration(program_file, tests, use_banks))
+            .map(|program| map_iteration(program, tests, use_banks))
             .collect();
 
         Self { iterations }
     }
 
-    pub fn new_with_banks(program_files: &[&str], tests: BoomerangTests<'_>) -> Self {
-        Self::new(program_files, tests, /* use_banks */ true)
+    pub fn new_with_banks(programs: &[(&str, &str)], tests: BoomerangTests<'_>) -> Self {
+        Self::new(programs, tests, /* use_banks */ true)
     }
 
-    pub fn new_with_rpc(program_files: &[&str], tests: BoomerangTests<'_>) -> Self {
-        Self::new(program_files, tests, /* use_banks */ false)
+    pub fn new_with_rpc(programs: &[(&str, &str)], tests: BoomerangTests<'_>) -> Self {
+        Self::new(programs, tests, /* use_banks */ false)
     }
 
     pub fn run(self) {

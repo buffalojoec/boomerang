@@ -10,7 +10,7 @@ use {
         BoomerangTestValidator,
     },
     solana_sdk::pubkey::Pubkey,
-    std::path::PathBuf,
+    std::{path::PathBuf, str::FromStr},
 };
 
 fn get_program_so_path(program_name: &str) -> PathBuf {
@@ -30,26 +30,24 @@ pub struct BoomerangIntegrationTest {
     test_validator_start_options: Vec<BoomerangTestValidatorStartOptions>,
 }
 impl BoomerangIntegrationTest {
-    pub fn new(programs: &[(&str, &Pubkey)], tests: BoomerangTests<'_>) -> Self {
+    pub fn new(programs: &[(&str, &str)], tests: BoomerangTests<'_>) -> Self {
         let mut iterations = vec![];
 
         let mut upgradeable_bpf_programs = vec![];
 
         for program in programs {
-            let (program_file, integration_test_program_id) = program;
+            let (file, id) = program;
+            let program_file = file;
+            let program_id = Pubkey::from_str(*id).unwrap();
 
             // Store the test iteration
-            iterations.push(map_iteration(
-                program_file,
-                tests,
-                /* use_banks */ false,
-            ));
+            iterations.push(map_iteration(program, tests, /* use_banks */ false));
 
             // Add the upgradeable program to the startup options
             upgradeable_bpf_programs.push(BoomerangTestValidatorStartOptions::UpgradeableProgram {
-                address_or_keypair: AddressOrKeypair::Address(**integration_test_program_id),
+                address_or_keypair: AddressOrKeypair::Address(program_id),
                 so_file_path: get_program_so_path(program_file),
-                upgrade_authority: AddressOrKeypair::Address(**integration_test_program_id), // For now
+                upgrade_authority: AddressOrKeypair::Address(program_id),
             });
         }
 

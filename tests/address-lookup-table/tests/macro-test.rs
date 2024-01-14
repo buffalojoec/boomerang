@@ -6,12 +6,12 @@ use solana_boomerang::boomerang;
     ],
     warp_slot = 150,
 )]
-fn this_is_a_test() {
+fn _this_is_a_test() {
     println!("This is a test");
 }
 
 #[boomerang::test]
-fn this_is_another_test() {
+fn _this_is_another_test() {
     println!("This is another test");
 }
 
@@ -26,16 +26,22 @@ fn this_is_another_test() {
             "927eaPZzYLFfox14h7UyaZjGk6yL7RSWjtmFv8dhBUki"
         ),
     ],
-    program_tests = true,
-    integration_tests = false,
+    program_tests = [
+        "solana_address_lookup_table_program",
+        "solana_address_lookup_table_zig",
+    ],
+    integration_tests = [
+        "solana_address_lookup_table_program",
+        "solana_address_lookup_table_zig",
+    ],
     migration_tests = [
         (
             "solana_address_lookup_table_program",
-            NativeProgram::AddressLookupTable
+            "NativeProgram::AddressLookupTable"
         ),
         (
             "solana_address_lookup_table_zig",
-            NativeProgram::AddressLookupTable
+            "NativeProgram::AddressLookupTable"
         ),
     ],
 )]

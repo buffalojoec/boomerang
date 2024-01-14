@@ -5,28 +5,37 @@ mod validator_options;
 
 use {
     client::BoomerangTestClientConfig, integration::BoomerangIntegrationTest, libtest_mimic::Trial,
-    program::BoomerangProgramTest, solana_sdk::pubkey::Pubkey,
+    program::BoomerangProgramTest,
 };
 pub use {
     libtest_mimic, solana_boomerang_client as client, solana_boomerang_macros as boomerang,
     solana_boomerang_test_validator as test_validator, tokio,
 };
 
-fn parse_env(variable: &str) -> bool {
-    std::env::var(variable).unwrap_or_default() == "true"
+fn select_test_programs<'a>(
+    programs: &'a [(&'a str, &'a str)],
+    program_names: &'a [&'a str],
+) -> Vec<(&'a str, &'a str)> {
+    programs
+        .iter()
+        .filter(|(program_name, _)| program_names.contains(program_name))
+        .map(|(program_name, program_id)| (*program_name, *program_id))
+        .collect::<Vec<_>>()
 }
 
 #[macro_export]
 macro_rules! boomerang_trial {
     ($test_func:path) => {{
-        |config: BoomerangTestClientConfig, use_banks: bool| {
-            Trial::test(stringify!($test_func), move || {
-                tokio::runtime::Builder::new_current_thread()
+        |config: solana_boomerang::client::BoomerangTestClientConfig, use_banks: bool| {
+            solana_boomerang::libtest_mimic::Trial::test(stringify!($test_func), move || {
+                solana_boomerang::tokio::runtime::Builder::new_current_thread()
                     .enable_all()
                     .build()
                     .unwrap()
                     .block_on(async {
-                        let client = BoomerangClient::new(&config, use_banks).await;
+                        let client =
+                            solana_boomerang::client::BoomerangClient::new(&config, use_banks)
+                                .await;
                         $test_func(client).await
                     });
                 Ok(())
@@ -38,33 +47,33 @@ macro_rules! boomerang_trial {
 type BoomerangTestFn = fn(BoomerangTestClientConfig, bool) -> Trial;
 pub type BoomerangTests<'a> = &'a [(BoomerangTestClientConfig, &'a [BoomerangTestFn])];
 
-pub async fn entrypoint(programs: &[(&str, &Pubkey)], tests: BoomerangTests<'_>) {
-    let integration = parse_env("INTEGRATION");
-    let migration = parse_env("MIGRATION");
-    let program = parse_env("PROGRAM");
-
-    if !integration && !migration && !program {
+pub async fn entrypoint(
+    programs: &[(&str, &str)],
+    program_tests: &[&str],
+    integration_tests: &[&str],
+    migration_tests: &[(&str, &str)],
+    tests: BoomerangTests<'_>,
+) {
+    if program_tests.is_empty() && integration_tests.is_empty() && migration_tests.is_empty() {
         println!("No tests to run");
         return;
     }
 
-    if program {
+    if !program_tests.is_empty() {
         // Run the program tests
-        let program_files = programs
-            .iter()
-            .map(|(program_file, _)| *program_file)
-            .collect::<Vec<_>>();
-        let program_test = BoomerangProgramTest::new_with_banks(&program_files, tests);
+        let programs = select_test_programs(programs, program_tests);
+        let program_test = BoomerangProgramTest::new_with_banks(&programs, tests);
         program_test.run();
     }
 
-    if integration {
+    if !integration_tests.is_empty() {
         // Run the integration tests
-        let integration_test = BoomerangIntegrationTest::new(programs, tests);
+        let programs = select_test_programs(programs, integration_tests);
+        let integration_test = BoomerangIntegrationTest::new(&programs, tests);
         integration_test.run();
     }
 
-    if migration {
+    if !migration_tests.is_empty() {
         // Run the migration tests
     }
 }
