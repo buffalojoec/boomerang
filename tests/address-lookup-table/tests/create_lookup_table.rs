@@ -17,6 +17,15 @@ use {
     std::borrow::Cow,
 };
 
+/// The `#[boomerang::test]` attribute defines a test case for the program.
+/// The attribute accepts arguments for configuring the test case's startup
+/// behavior. These startup configs are valid for both a `BanksClient` program
+/// test and an `RpcClient` integration/migration test.
+/// * `features_disabled` is a list of feature IDs from the Solana SDK's
+///   `feature_set` to disable on startup. validator before running the test
+///   case.
+/// * `warp_slot` is the slot to warp the bank or test validator to before
+///   running the test case.
 #[boomerang::test(warp_slot = 123)]
 pub async fn test_create_lookup_table_idempotent(mut client: BoomerangClient) {
     let authority_address = Pubkey::new_unique();

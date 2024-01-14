@@ -1,4 +1,4 @@
-# Boomerang
+# 🪃  Boomerang
 
 As a result of
 [SIMD 0088](https://github.com/solana-foundation/solana-improvement-documents/pull/88),
@@ -18,3 +18,12 @@ Boomerang can perform the following tests on *any* Solana program:
 
 Migration tests are primarily useful for integration-testing feature-gated
 native program migrations to BPF, as per SIMD 0088.
+
+Note that with Boomerang, all program tests are still invoked with:
+
+```
+cargo test-sbf
+```
+
+See more in the Address Lookup Table (BPF version)
+[test folder](./tests/address-lookup-table/tests).
