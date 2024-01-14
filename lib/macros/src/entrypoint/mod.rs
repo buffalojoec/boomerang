@@ -92,7 +92,7 @@ impl From<&Entrypoint> for proc_macro2::TokenStream {
             .map(|i| i.to_token_stream())
             .collect::<Vec<_>>();
 
-        let _ = quote::quote! {
+        quote::quote! {
             use solana_boomerang::tokio;
 
             #(# all_trials_tokens)*
@@ -127,7 +127,6 @@ impl From<&Entrypoint> for proc_macro2::TokenStream {
                     tests,
                 ).await;
             }
-        };
-        quote::quote! {}
+        }
     }
 }

@@ -160,8 +160,10 @@ pub struct CrateContext {
 }
 
 impl CrateContext {
-    pub fn functions(&self) -> impl Iterator<Item = &syn::ItemFn> {
-        self.modules.iter().flat_map(|(_, ctx)| ctx.functions())
+    pub fn functions(&self) -> impl Iterator<Item = (&String, &syn::ItemFn)> {
+        self.modules
+            .iter()
+            .flat_map(|(path, module)| module.functions().map(move |f| (path, f)))
     }
 
     fn parse(root: &std::path::Path) -> Result<Self, anyhow::Error> {
@@ -171,8 +173,6 @@ impl CrateContext {
     }
 }
 
-// Let this function use the unstable `proc_macro_span` feature
-
 pub fn get_parsed_crate_context() -> CrateContext {
     // TODO: This is obviously not dynamic yet
     let root = std::env::current_dir()
@@ -180,13 +180,9 @@ pub fn get_parsed_crate_context() -> CrateContext {
         .join("tests")
         .join("address-lookup-table")
         .join("tests")
-        .join("macro-test.rs");
+        .join("main.rs");
     CrateContext::parse(&root).expect(
-        &format!(
-            "Failed to detect `tests/main.rs`. \
-            Make sure your `#[boomerang::main]` function is in `tests/main.rs`\n\
-            Root: {}",
-            root.display()
-        )
+        "Failed to detect `tests/main.rs`. \
+            Make sure your `#[boomerang::main]` function is in `tests/main.rs`",
     )
 }

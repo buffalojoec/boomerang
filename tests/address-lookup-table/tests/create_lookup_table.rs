@@ -2,7 +2,10 @@
 
 use {
     solana_address_lookup_table_program::state::{AddressLookupTable, LookupTableMeta},
-    solana_boomerang::client::{BoomerangClient, BoomerangTestClient},
+    solana_boomerang::{
+        boomerang,
+        client::{BoomerangClient, BoomerangTestClient},
+    },
     solana_program::instruction::InstructionError,
     solana_sdk::{
         address_lookup_table::instruction::{create_lookup_table, create_lookup_table_signed},
@@ -14,6 +17,7 @@ use {
     std::borrow::Cow,
 };
 
+#[boomerang::test(warp_slot = 123)]
 pub async fn test_create_lookup_table_idempotent(mut client: BoomerangClient) {
     let authority_address = Pubkey::new_unique();
     let payer_pubkey = client.fee_payer().pubkey();
@@ -61,6 +65,12 @@ pub async fn test_create_lookup_table_idempotent(mut client: BoomerangClient) {
     }
 }
 
+#[boomerang::test(
+    features_disabled = [
+        solana_sdk::feature_set::relax_authority_signer_check_for_lookup_table_creation::id,
+    ],
+    warp_slot = 123,
+)]
 pub async fn test_create_lookup_table_not_idempotent(mut client: BoomerangClient) {
     let payer_pubkey = client.fee_payer().pubkey();
     let authority_keypair = Keypair::new();
@@ -97,6 +107,7 @@ pub async fn test_create_lookup_table_not_idempotent(mut client: BoomerangClient
     }
 }
 
+#[boomerang::test(warp_slot = 123)]
 pub async fn test_create_lookup_table_use_payer_as_authority(mut client: BoomerangClient) {
     let payer_pubkey = client.fee_payer().pubkey();
     let authority_address = payer_pubkey;
@@ -114,6 +125,11 @@ pub async fn test_create_lookup_table_use_payer_as_authority(mut client: Boomera
         .unwrap();
 }
 
+#[boomerang::test(
+    features_disabled = [
+        solana_sdk::feature_set::relax_authority_signer_check_for_lookup_table_creation::id,
+    ],
+)]
 pub async fn test_create_lookup_table_missing_signer(mut client: BoomerangClient) {
     let unsigned_authority_address = Pubkey::new_unique();
 
@@ -136,6 +152,7 @@ pub async fn test_create_lookup_table_missing_signer(mut client: BoomerangClient
         .await;
 }
 
+#[boomerang::test]
 pub async fn test_create_lookup_table_not_recent_slot(mut client: BoomerangClient) {
     let payer = client.fee_payer();
     let authority_address = Pubkey::new_unique();
@@ -153,6 +170,7 @@ pub async fn test_create_lookup_table_not_recent_slot(mut client: BoomerangClien
         .await;
 }
 
+#[boomerang::test(warp_slot = 123)]
 pub async fn test_create_lookup_table_pda_mismatch(mut client: BoomerangClient) {
     let payer = client.fee_payer();
     let authority_address = Pubkey::new_unique();

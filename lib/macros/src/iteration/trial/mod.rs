@@ -1,7 +1,7 @@
 mod parser;
 
 pub struct Trial {
-    function_full_path: syn::Ident,
+    function_full_path: syn::Path,
     generated_trial_name: syn::Ident,
 }
 
@@ -11,12 +11,21 @@ impl Trial {
     }
 }
 
-impl From<&syn::ItemFn> for Trial {
-    fn from(item_fn: &syn::ItemFn) -> Self {
-        let function_full_path = item_fn.sig.ident.clone();
+impl From<&(&String, &syn::ItemFn)> for Trial {
+    fn from(item_fn: &(&String, &syn::ItemFn)) -> Self {
+        let function_full_path = syn::parse_str::<syn::Path>(&format!(
+            "{}::{}",
+            // This path starts with `::` to be used from the crate root.
+            // However, since we're working with tests, the module is expected to be
+            // declared in the test root, in our case `tests/main.rs` (as required by
+            // Boomerang).
+            item_fn.0.chars().skip(2).collect::<String>(),
+            item_fn.1.sig.ident.to_string(),
+        ))
+        .unwrap();
         let generated_trial_name = syn::Ident::new(
-            &format!("boomerang_{}", function_full_path.to_string()),
-            function_full_path.span(),
+            &format!("boomerang_{}", item_fn.1.sig.ident.to_string()),
+            item_fn.1.sig.ident.span(),
         );
         Self {
             function_full_path,
@@ -36,7 +45,7 @@ impl From<&Trial> for proc_macro2::TokenStream {
         let function_full_path = &ast.function_full_path;
         let generated_trial_name = &ast.generated_trial_name;
 
-        let _ = quote::quote! {
+        quote::quote! {
             fn #generated_trial_name (
                 config: solana_boomerang::client::BoomerangTestClientConfig,
                 use_banks: bool,
@@ -45,13 +54,12 @@ impl From<&Trial> for proc_macro2::TokenStream {
                     #function_full_path
                 )(config, use_banks)
             }
-        };
-        quote::quote! {}
+        }
     }
 }
 
 pub struct TrialConfig {
-    features_disabled: Vec<String>,
+    features_disabled: Vec<syn::Path>,
     warp_slot: u64,
 }
 
@@ -87,17 +95,14 @@ impl From<&TrialConfig> for proc_macro2::TokenStream {
         let features_disabled = &ast.features_disabled;
         let warp_slot = ast.warp_slot;
 
-        let _ = quote::quote! {
+        quote::quote! {
             solana_boomerang::client::BoomerangTestClientConfig {
                 features_disabled: vec![
-                    #( #features_disabled ),*
+                    #( #features_disabled() ),*
                 ],
-                program_file: program_file.clone(),
-                program_id,
                 warp_slot: #warp_slot,
-                ..solana_boomerang::client::BoomerangClientTestConfig::default()
+                ..solana_boomerang::client::BoomerangTestClientConfig::default()
             }
-        };
-        quote::quote! {}
+        }
     }
 }
