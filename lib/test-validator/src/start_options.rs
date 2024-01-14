@@ -1,4 +1,4 @@
-use {solana_sdk::pubkey::Pubkey, std::path::PathBuf};
+use std::path::PathBuf;
 
 trait ToStringArg {
     fn to_string_arg(&self) -> String;
@@ -13,7 +13,7 @@ impl ToStringArg for PathBuf {
 }
 
 pub enum AddressOrKeypair {
-    Address(Pubkey),
+    Address(String),
     Keypair(PathBuf),
 }
 impl ToStringArg for AddressOrKeypair {
@@ -35,7 +35,7 @@ pub enum UrlOrMoniker {
 
 pub enum BoomerangTestValidatorStartOptions {
     /// Load an account from the provided JSON file
-    Account { address: Pubkey, dump_path: PathBuf },
+    Account { address: String, dump_path: PathBuf },
     /// Load all the accounts from the JSON files found in the specified
     /// DIRECTORY
     AccountDir { directory: PathBuf },
@@ -46,19 +46,19 @@ pub enum BoomerangTestValidatorStartOptions {
     },
     /// Copy an account from the cluster referenced by the --url argument the
     /// genesis configuration
-    Clone { address: Pubkey },
+    Clone { address: String },
     /// Copy an upgradeable program and its executable data from the cluster
     /// referenced by the --url argument the genesis configuration
-    CloneUpgradeableProgram { address: Pubkey },
+    CloneUpgradeableProgram { address: String },
     /// Configuration file to use
     Config { path: PathBuf },
     /// Deactivate this feature in genesis
-    DeactivateFeature { feature_pubkey: Pubkey },
+    DeactivateFeature { feature_pubkey: String },
     /// Copy an account from the cluster referenced by the --url argument,
     /// skipping it if it doesn't exist
-    MaybeClone { address: Pubkey },
+    MaybeClone { address: String },
     /// Address of the mint account that will receive tokens created at genesis
-    Mint { address: Pubkey },
+    Mint { address: String },
     /// Override the number of slots in an epoch
     SlotsPerEpoch { slots: u64 },
     /// Add an upgradeable SBF program to the genesis configuration

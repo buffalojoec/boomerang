@@ -9,8 +9,7 @@ use {
         start_options::{AddressOrKeypair, BoomerangTestValidatorStartOptions},
         BoomerangTestValidator,
     },
-    solana_sdk::pubkey::Pubkey,
-    std::{path::PathBuf, str::FromStr},
+    std::path::PathBuf,
 };
 
 fn get_program_so_path(program_name: &str) -> PathBuf {
@@ -38,14 +37,14 @@ impl BoomerangIntegrationTest {
         for program in programs {
             let (file, id) = program;
             let program_file = file;
-            let program_id = Pubkey::from_str(*id).unwrap();
+            let program_id = id.to_string();
 
             // Store the test iteration
             iterations.push(map_iteration(program, tests, /* use_banks */ false));
 
             // Add the upgradeable program to the startup options
             upgradeable_bpf_programs.push(BoomerangTestValidatorStartOptions::UpgradeableProgram {
-                address_or_keypair: AddressOrKeypair::Address(program_id),
+                address_or_keypair: AddressOrKeypair::Address(program_id.clone()),
                 so_file_path: get_program_so_path(program_file),
                 upgrade_authority: AddressOrKeypair::Address(program_id),
             });

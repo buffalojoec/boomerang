@@ -13,7 +13,7 @@ impl IntoTestValidatorStartOptions for BoomerangTestClientConfig {
 
         self.features_disabled.iter().for_each(|feature| {
             options.push(BoomerangTestValidatorStartOptions::DeactivateFeature {
-                feature_pubkey: *feature,
+                feature_pubkey: feature.to_string(),
             });
         });
 

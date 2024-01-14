@@ -1,28 +1,11 @@
-pub mod config_file;
+pub mod commands;
 pub mod start_options;
 
 use {
+    commands::{run_command, run_command_detached, run_command_with_num_retries},
     start_options::BoomerangTestValidatorStartOptions,
-    std::{path::PathBuf, process::Stdio},
+    std::path::PathBuf,
 };
-
-fn run_command(command: &str) {
-    let status = std::process::Command::new("sh")
-        .arg("-c")
-        .arg(command)
-        .status()
-        .expect("failed to execute process");
-    assert!(status.success());
-}
-
-fn run_command_detached(command: &str) {
-    std::process::Command::new("sh")
-        .arg("-c")
-        .arg(command)
-        .stdout(Stdio::null())
-        .spawn()
-        .expect("failed to execute process");
-}
 
 pub struct BoomerangTestValidator {
     ledger_path: PathBuf,
@@ -57,8 +40,8 @@ impl BoomerangTestValidator {
         }
     }
 
-    /// Activate a feature on the test validator
     pub fn solana_feature_activate(&self, feature_keypair_path: &str) {
+        println!("Activating feature: {}", feature_keypair_path);
         let command = format!(
             "{} feature activate {} development",
             self.solana_cli_alias, feature_keypair_path,
@@ -66,7 +49,6 @@ impl BoomerangTestValidator {
         run_command(&command)
     }
 
-    /// Start the test validator
     pub fn solana_test_validator_start(&self) {
         println!("Starting test validator");
         println!("Ledger path: {:?}", self.ledger_path);
@@ -78,12 +60,11 @@ impl BoomerangTestValidator {
         std::thread::sleep(std::time::Duration::from_secs(5));
     }
 
-    /// Tear down the test validator
     pub fn solana_test_validator_teardown(&self) {
         println!("Tearing down test validator");
         println!("Ledger path: {:?}", self.ledger_path);
         let command = format!("rm -rf {}", self.ledger_path.to_str().unwrap());
-        run_command(&command);
+        run_command_with_num_retries(&command, 3);
         std::thread::sleep(std::time::Duration::from_secs(2));
     }
 }
