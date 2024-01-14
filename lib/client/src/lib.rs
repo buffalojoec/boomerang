@@ -104,6 +104,22 @@ impl BoomerangTestClient for BoomerangClient {
         }
     }
 
+    async fn poll_for_next_epoch(&self) -> Result<(), Box<dyn std::error::Error>> {
+        if self.use_banks {
+            self.banks.as_ref().unwrap().poll_for_next_epoch().await
+        } else {
+            self.rpc.as_ref().unwrap().poll_for_next_epoch().await
+        }
+    }
+
+    async fn poll_slots(&self, num_slots: u64) -> Result<(), Box<dyn std::error::Error>> {
+        if self.use_banks {
+            self.banks.as_ref().unwrap().poll_slots(num_slots).await
+        } else {
+            self.rpc.as_ref().unwrap().poll_slots(num_slots).await
+        }
+    }
+
     async fn confirm_transaction(
         &self,
         signature: &Signature,

@@ -20,6 +20,7 @@ pub struct BoomerangTestClientConfig {
     pub program_id: Pubkey,
     pub rpc_commitment: CommitmentConfig,
     pub rpc_endpoint: String,
+    pub slots_per_epoch: u64,
     pub warp_slot: Slot,
 }
 impl Default for BoomerangTestClientConfig {
@@ -30,6 +31,7 @@ impl Default for BoomerangTestClientConfig {
             program_id: Pubkey::new_unique(),
             rpc_commitment: CommitmentConfig::processed(),
             rpc_endpoint: "http://127.0.0.1:8899".to_string(),
+            slots_per_epoch: 300, // Arbitrarily small number for testing
             warp_slot: 0,
         }
     }
@@ -70,6 +72,10 @@ pub trait BoomerangTestClient {
         &mut self,
         pubkey: &Pubkey,
     ) -> Result<Option<Account>, Box<dyn std::error::Error>>;
+
+    async fn poll_for_next_epoch(&self) -> Result<(), Box<dyn std::error::Error>>;
+
+    async fn poll_slots(&self, num_slots: u64) -> Result<(), Box<dyn std::error::Error>>;
 
     /// Create a transaction with the provided instructions, fee payer,
     /// signers, and recent blockhash

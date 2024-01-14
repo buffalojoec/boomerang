@@ -100,4 +100,27 @@ impl BoomerangTestClient for BoomerangRpcClient {
             .map(|res| res.value)
             .map_err(|err| err.into())
     }
+
+    async fn poll_for_next_epoch(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let epoch_info = self.rpc_client.get_epoch_info().await?;
+        let current = epoch_info.epoch;
+        loop {
+            let epoch_info = self.rpc_client.get_epoch_info().await?;
+            if epoch_info.epoch > current {
+                return Ok(());
+            }
+            std::thread::sleep(std::time::Duration::from_secs(5));
+        }
+    }
+
+    async fn poll_slots(&self, num_slots: u64) -> Result<(), Box<dyn std::error::Error>> {
+        let slot = self.rpc_client.get_slot().await?;
+        loop {
+            let current_slot = self.rpc_client.get_slot().await?;
+            if current_slot > slot + num_slots {
+                return Ok(());
+            }
+            std::thread::sleep(std::time::Duration::from_secs(1));
+        }
+    }
 }

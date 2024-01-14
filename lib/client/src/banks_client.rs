@@ -71,6 +71,14 @@ impl BoomerangTestClient for BoomerangBanksClient {
             .map_err(|err| Some(err.unwrap()))
     }
 
+    async fn poll_for_next_epoch(&self) -> Result<(), Box<dyn std::error::Error>> {
+        unimplemented!() // TODO: Implement for banks client
+    }
+
+    async fn poll_slots(&self, _num_slots: u64) -> Result<(), Box<dyn std::error::Error>> {
+        unimplemented!() // TODO: Implement for banks client
+    }
+
     async fn confirm_transaction(
         &self,
         _signature: &Signature,
