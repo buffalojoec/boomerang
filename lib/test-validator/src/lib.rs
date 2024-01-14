@@ -16,8 +16,8 @@ pub struct BoomerangTestValidator {
 impl BoomerangTestValidator {
     pub fn new(
         ledger_path: PathBuf,
-        solana_cli_alias: String,
-        solana_test_validator_alias: String,
+        solana_cli_alias: &str,
+        solana_test_validator_alias: &str,
         start_options: &[&[BoomerangTestValidatorStartOptions]],
     ) -> Self {
         let mut test_validator_start_options = String::new();
@@ -34,8 +34,8 @@ impl BoomerangTestValidator {
 
         Self {
             ledger_path,
-            solana_cli_alias,
-            solana_test_validator_alias,
+            solana_cli_alias: solana_cli_alias.to_string(),
+            solana_test_validator_alias: solana_test_validator_alias.to_string(),
             test_validator_start_options,
         }
     }

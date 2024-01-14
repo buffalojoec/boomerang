@@ -1,8 +1,4 @@
-use {
-    cargo_metadata::MetadataCommand,
-    solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer},
-    std::path::PathBuf,
-};
+use {cargo_metadata::MetadataCommand, solana_sdk::signature::Keypair, std::path::PathBuf};
 
 pub fn workspace_root() -> PathBuf {
     MetadataCommand::new()
@@ -18,25 +14,52 @@ pub fn program_so_path(program_name: &str) -> PathBuf {
         .join(format!("{}.so", program_name))
 }
 
+pub fn solana_install_path() -> PathBuf {
+    workspace_root().join(".solana")
+}
+
+pub fn solana_cli_path() -> PathBuf {
+    solana_install_path()
+        .join("target")
+        .join("debug")
+        .join("solana")
+}
+pub fn solana_cli_path_string() -> String {
+    solana_cli_path()
+        .to_str()
+        .expect("Failed to convert Solana CLI path to string")
+        .to_string()
+}
+
+pub fn solana_test_validator_path() -> PathBuf {
+    solana_install_path()
+        .join("target")
+        .join("debug")
+        .join("solana-test-validator")
+}
+pub fn solana_test_validator_path_string() -> String {
+    solana_test_validator_path()
+        .to_str()
+        .expect("Failed to convert Solana test validator path to string")
+        .to_string()
+}
+
+pub fn temporary_directory_path() -> PathBuf {
+    workspace_root().join("tmp")
+}
+
 pub fn test_ledger_path() -> PathBuf {
     workspace_root().join("test-ledger")
 }
 
-pub fn _read_pubkey_from_keypair_path(
-    path: &PathBuf,
-) -> Result<Pubkey, Box<dyn std::error::Error>> {
-    let file_contents = std::fs::read_to_string(path)?;
-    let bytes: Vec<u8> = serde_json::from_str(&file_contents)?;
-    let keypair = Keypair::from_bytes(&bytes)?;
-    Ok(keypair.pubkey())
+pub fn create_directory(path: &PathBuf) {
+    if !path.exists() {
+        std::fs::create_dir_all(path).expect("Failed to create directory");
+    }
 }
 
-pub fn _write_keypair_to_path(
-    keypair: &Keypair,
-    path: &PathBuf,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn write_keypair_to_path(keypair: &Keypair, path: &PathBuf) {
     let bytes = keypair.to_bytes().to_vec();
-    let file_contents = serde_json::to_string(&bytes)?;
-    std::fs::write(path, file_contents)?;
-    Ok(())
+    let file_contents = serde_json::to_string(&bytes).expect("Failed to serialize keypair to JSON");
+    std::fs::write(path, file_contents).expect("Failed to write keypair to file");
 }

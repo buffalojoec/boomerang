@@ -1,5 +1,6 @@
 mod dirs;
 pub mod integration;
+pub mod migration;
 pub mod program;
 pub mod validator_options;
 
