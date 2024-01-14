@@ -52,6 +52,15 @@ pub struct TrialConfig {
     warp_slot: u64,
 }
 
+impl Default for TrialConfig {
+    fn default() -> Self {
+        Self {
+            deactivate_features: Vec::new(),
+            warp_slot: 0,
+        }
+    }
+}
+
 impl PartialEq for TrialConfig {
     fn eq(&self, other: &Self) -> bool {
         self.deactivate_features == other.deactivate_features && self.warp_slot == other.warp_slot

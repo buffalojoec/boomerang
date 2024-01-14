@@ -15,7 +15,7 @@ fn try_parse_trial_with_config(
 ) -> syn::Result<Option<(trial::TrialConfig, trial::Trial)>> {
     for attr in &item_fn.attrs {
         if is_boomerang_test_attr(attr) {
-            let trial_config = attr.parse_args::<trial::TrialConfig>()?;
+            let trial_config = attr.parse_args::<trial::TrialConfig>().unwrap_or_default();
             let trial = trial::Trial::from(item_fn);
             return Ok(Some((trial_config, trial)));
         }
@@ -30,10 +30,10 @@ pub struct Iteration {
 
 impl Iteration {
     pub fn parse_iterations() -> syn::Result<Vec<Self>> {
-        let all_item_fns = krate_parser::parse_all_item_fns()?;
+        let parsed_test_crate = krate_parser::get_parsed_crate_context();
 
-        let all_trials = all_item_fns
-            .iter()
+        let all_trials = parsed_test_crate
+            .functions()
             .map(try_parse_trial_with_config)
             .collect::<syn::Result<Vec<_>>>()?;
 
