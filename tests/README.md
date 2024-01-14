@@ -10,26 +10,8 @@ provided in its BPF form, to be tested against the native version.
 You can find the tests using Boomerang in the
 [tests](./address-lookup-table/tests) folder of the program.
 
-Program tests:
+All tests are dictated by the config in `tests/main.rs` and are run with:
 
 ```
-./boomerang -p
-```
-
-Integration tests:
-
-```
-./boomerang -i
-```
-
-Migration tests:
-
-```
-./boomerang -m
-```
-
-All tests:
-
-```
-./boomerang -pim
+cargo test-sbf
 ```

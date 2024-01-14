@@ -1,5 +1,0 @@
-#!/bin/bash
-
-cargo build
-
-./target/debug/boomerang $1
