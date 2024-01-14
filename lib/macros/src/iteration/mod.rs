@@ -29,6 +29,10 @@ pub struct Iteration {
 }
 
 impl Iteration {
+    pub fn trials(&self) -> &Vec<trial::Trial> {
+        &self.trials
+    }
+
     pub fn parse_iterations() -> syn::Result<Vec<Self>> {
         let parsed_test_crate = krate_parser::get_parsed_crate_context();
 
@@ -53,5 +57,36 @@ impl Iteration {
         );
 
         Ok(iterations)
+    }
+}
+
+impl quote::ToTokens for Iteration {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        tokens.extend::<proc_macro2::TokenStream>(self.into());
+    }
+}
+
+impl From<&Iteration> for proc_macro2::TokenStream {
+    fn from(ast: &Iteration) -> Self {
+        use quote::ToTokens;
+
+        let config = &ast.config;
+        let trials = &ast.trials;
+
+        let _config_tokens = config.to_token_stream();
+        let _all_generated_trial_names = trials
+            .iter()
+            .map(|trial| trial.generated_trial_name())
+            .collect::<Vec<_>>();
+
+        // quote::quote! {
+        //     (
+        //         #config_tokens,
+        //         &[
+        //             #(#all_generated_trial_names),*
+        //         ]
+        //     )
+        // }
+        quote::quote! {}
     }
 }

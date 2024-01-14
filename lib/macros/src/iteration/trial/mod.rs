@@ -5,6 +5,12 @@ pub struct Trial {
     generated_trial_name: syn::Ident,
 }
 
+impl Trial {
+    pub fn generated_trial_name(&self) -> &syn::Ident {
+        &self.generated_trial_name
+    }
+}
+
 impl From<&syn::ItemFn> for Trial {
     fn from(item_fn: &syn::ItemFn) -> Self {
         let function_full_path = item_fn.sig.ident.clone();
@@ -27,11 +33,8 @@ impl quote::ToTokens for Trial {
 
 impl From<&Trial> for proc_macro2::TokenStream {
     fn from(ast: &Trial) -> Self {
-        let function_full_path = &ast.function_full_path;
-        let generated_trial_name = &ast.generated_trial_name;
-
-        println!("function_full_path:  {}", function_full_path);
-        println!("generated_trial_name:      {}", generated_trial_name);
+        let _function_full_path = &ast.function_full_path;
+        let _generated_trial_name = &ast.generated_trial_name;
 
         // quote::quote! {
         //     fn $generated_trial_name (
@@ -81,12 +84,8 @@ impl quote::ToTokens for TrialConfig {
 
 impl From<&TrialConfig> for proc_macro2::TokenStream {
     fn from(ast: &TrialConfig) -> Self {
-        let deactivate_features = &ast.deactivate_features;
-        let warp_slot = ast.warp_slot;
-
-        println!("deactivate_features:  {:?}", deactivate_features);
-        println!("warp_slot:            {}", warp_slot);
-        println!("  ..BoomerangClientTestConfig::default()");
+        let _deactivate_features = &ast.deactivate_features;
+        let _warp_slot = ast.warp_slot;
 
         // quote::quote! {
         //     solana_boomerang::client::BoomerangTestClientConfig {

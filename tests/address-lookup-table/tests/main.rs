@@ -1,49 +1,3 @@
-//! The idea here is that this entire file should be replaced by a minimal
-//! procedural macro attribute configuration.
-//!
-//! Perhaps you include the modules above this comment, and then you have a
-//! macro attribute that looks something like this:
-//!
-//! #[boomerang::main(
-//!     programs = [
-//!         (
-//!             "solana_address_lookup_table_program",
-//!             "927eaPZzYLFfox14h7UyaZjGk6yL7RSWjtmFv8dhBUki"
-//!         ),
-//!         (
-//!             "solana_address_lookup_table_zig",
-//!             "927eaPZzYLFfox14h7UyaZjGk6yL7RSWjtmFv8dhBUki"
-//!         ),
-//!     ],
-//!     program_tests = true,
-//!     integration_tests = true,
-//!     migration_tests = [
-//!         (
-//!             "solana_address_lookup_table_program",
-//!             NativeProgram::AddressLookupTable
-//!         ),
-//!         (
-//!             "solana_address_lookup_table_zig",
-//!             NativeProgram::AddressLookupTable
-//!         ),
-//!     ]
-//! )]
-//! async fn main() {}
-//!
-//! Additionally, for the tests themselves, you could have a macro attribute
-//! that looks something like this:
-//!
-//! #[boomerang::test]
-//! #[boomerang_test_config(
-//!     deactivate_features = [
-//!         feature_set::relax_authority_signer_check_for_lookup_table_creation::id(),
-//!     ],
-//!     warp_slot = 150,
-//! )]
-//! async fn test_1(mut client: BoomerangClient) {
-//!     /* .. */
-//! }
-
 mod create_lookup_table;
 
 use {
@@ -108,10 +62,13 @@ async fn main() {
         // More program implementations...
     ];
 
+    // TODO: These should come out and be passed via config from the above list
     let program_file = "solana_address_lookup_table_program.so".to_string();
     let program_id = address_lookup_table::program::id();
 
     let config_default = BoomerangTestClientConfig {
+        // TODO: These should no longer be required here and can be provided to the
+        // config during the test run
         program_file: program_file.clone(),
         program_id,
         ..BoomerangTestClientConfig::default()
