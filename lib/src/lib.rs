@@ -1,7 +1,7 @@
 mod dirs;
 pub mod integration;
 pub mod program;
-mod validator_options;
+pub mod validator_options;
 
 use {
     client::BoomerangTestClientConfig, integration::BoomerangIntegrationTest, libtest_mimic::Trial,
@@ -44,8 +44,9 @@ macro_rules! boomerang_trial {
     }};
 }
 
-type BoomerangTestFn = fn(BoomerangTestClientConfig, bool) -> Trial;
-pub type BoomerangTests<'a> = &'a [(BoomerangTestClientConfig, &'a [BoomerangTestFn])];
+pub type BoomerangTestFn = fn(BoomerangTestClientConfig, bool) -> Trial;
+pub type BoomerangTest<'a> = (BoomerangTestClientConfig, &'a [BoomerangTestFn]);
+pub type BoomerangTests<'a> = &'a [BoomerangTest<'a>];
 
 pub async fn entrypoint(
     programs: &[(&str, &str)],
@@ -60,14 +61,12 @@ pub async fn entrypoint(
     }
 
     if !program_tests.is_empty() {
-        // Run the program tests
         let programs = select_test_programs(programs, program_tests);
-        let program_test = BoomerangProgramTest::new_with_banks(&programs, tests);
+        let program_test = BoomerangProgramTest::new(&programs, tests);
         program_test.run();
     }
 
     if !integration_tests.is_empty() {
-        // Run the integration tests
         let programs = select_test_programs(programs, integration_tests);
         let integration_test = BoomerangIntegrationTest::new(&programs, tests);
         integration_test.run();

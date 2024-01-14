@@ -4,11 +4,22 @@ use {
     std::path::PathBuf,
 };
 
-pub fn workspace_root() -> Result<PathBuf, Box<dyn std::error::Error>> {
+pub fn workspace_root() -> PathBuf {
     MetadataCommand::new()
         .exec()
         .map(|metadata| metadata.workspace_root.into_std_path_buf())
-        .map_err(|err| err.into())
+        .expect("Failed to get workspace root")
+}
+
+pub fn program_so_path(program_name: &str) -> PathBuf {
+    workspace_root()
+        .join("target")
+        .join("deploy")
+        .join(format!("{}.so", program_name))
+}
+
+pub fn test_ledger_path() -> PathBuf {
+    workspace_root().join("test-ledger")
 }
 
 pub fn _read_pubkey_from_keypair_path(

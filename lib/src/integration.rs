@@ -1,66 +1,29 @@
 use {
     crate::{
         dirs,
-        program::{map_iteration, BoomerangProgramTestIteration},
+        program::{BoomerangProgramTest, BoomerangProgramTestIteration},
         validator_options::IntoTestValidatorStartOptions,
         BoomerangTests,
     },
-    solana_boomerang_test_validator::{
-        start_options::{AddressOrKeypair, BoomerangTestValidatorStartOptions},
-        BoomerangTestValidator,
-    },
-    std::path::PathBuf,
+    solana_boomerang_test_validator::BoomerangTestValidator,
 };
 
-fn get_program_so_path(program_name: &str) -> PathBuf {
-    dirs::workspace_root()
-        .unwrap()
-        .join("target")
-        .join("deploy")
-        .join(format!("{}.so", program_name))
-}
-
-fn get_ledger_path() -> PathBuf {
-    dirs::workspace_root().unwrap().join("test-ledger")
-}
+const SOLANA_CLI_ALIAS: &str = "solana";
+const SOLANA_TEST_VALIDATOR_ALIAS: &str = "solana-test-validator";
 
 pub struct BoomerangIntegrationTest {
     iterations: Vec<BoomerangProgramTestIteration>,
-    test_validator_start_options: Vec<BoomerangTestValidatorStartOptions>,
 }
 impl BoomerangIntegrationTest {
     pub fn new(programs: &[(&str, &str)], tests: BoomerangTests<'_>) -> Self {
-        let mut iterations = vec![];
-
-        let mut upgradeable_bpf_programs = vec![];
-
-        for program in programs {
-            let (file, id) = program;
-            let program_file = file;
-            let program_id = id.to_string();
-
-            // Store the test iteration
-            iterations.push(map_iteration(program, tests, /* use_banks */ false));
-
-            // Add the upgradeable program to the startup options
-            upgradeable_bpf_programs.push(BoomerangTestValidatorStartOptions::UpgradeableProgram {
-                address_or_keypair: AddressOrKeypair::Address(program_id.clone()),
-                so_file_path: get_program_so_path(program_file),
-                upgrade_authority: AddressOrKeypair::Address(program_id),
-            });
-        }
-
-        // TODO: Add other options here from test configurations
-        let test_validator_start_options = upgradeable_bpf_programs;
-
         Self {
-            iterations,
-            test_validator_start_options,
+            iterations: BoomerangProgramTest::build_program_test_iterations(
+                programs, tests, /* use_banks */ false,
+            ),
         }
     }
 
     pub fn run(self) {
-        let ledger_path = get_ledger_path();
         for iteration in self.iterations {
             println!(
                 "Running integrations tests for {}",
@@ -68,24 +31,17 @@ impl BoomerangIntegrationTest {
             );
 
             for chunk in iteration.chunks() {
-                // Start the test validator
                 let test_validator = BoomerangTestValidator::new(
-                    ledger_path.clone(),
-                    "solana".to_string(),
-                    "solana-test-validator".to_string(),
-                    &[
-                        &self.test_validator_start_options,
-                        // Build out any additional startup options
-                        &chunk.config().to_test_validator_start_options(),
-                    ],
+                    dirs::test_ledger_path(),
+                    SOLANA_CLI_ALIAS.to_string(),
+                    SOLANA_TEST_VALIDATOR_ALIAS.to_string(),
+                    &[&chunk.config().to_test_validator_start_options()],
                 );
                 test_validator.solana_test_validator_teardown();
                 test_validator.solana_test_validator_start();
 
-                // Run the tests
                 chunk.run();
 
-                // Tear down the test validator
                 test_validator.solana_test_validator_teardown();
             }
         }
