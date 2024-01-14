@@ -174,7 +174,20 @@ impl CrateContext {
 }
 
 pub fn get_parsed_crate_context() -> CrateContext {
-    // TODO: This is obviously not dynamic yet
+    // TODO: This is obviously not dynamic yet.
+    // We need to figure out how to get the crate root path dynamically.
+    //
+    // One option is to use `proc_macro_span` to get the `SourceFile` for a
+    // call site.
+    // However, this is an unstable feature and requires the nightly compiler.
+    //
+    // Another option is to potentially use `cargo_metadata`, however it does
+    // not appear to pander specifically to navigating test folders.
+    //
+    // Ideally, since this execution path is happening from the
+    // `#[boomerang::main]` macro, and there's only one such macro invocation
+    // in any given test suite, we need to devise a way to detect the file path
+    // of the `#[boomerang::main]` macro invocation.
     let root = std::env::current_dir()
         .unwrap()
         .join("tests")

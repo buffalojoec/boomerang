@@ -2,6 +2,7 @@ extern crate proc_macro;
 
 mod entrypoint;
 mod iteration;
+mod krate_parser;
 mod parser;
 
 #[proc_macro_attribute]

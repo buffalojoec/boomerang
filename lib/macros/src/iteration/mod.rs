@@ -1,4 +1,3 @@
-mod krate_parser;
 mod trial;
 
 fn is_boomerang_test_attr(attr: &syn::Attribute) -> bool {
@@ -37,7 +36,7 @@ impl Iteration {
     }
 
     pub fn parse_iterations() -> syn::Result<Vec<Self>> {
-        Ok(krate_parser::get_parsed_crate_context()
+        Ok(crate::krate_parser::get_parsed_crate_context()
             .functions()
             .try_fold(Vec::<Iteration>::new(), |mut acc, func| {
                 try_parse_trial_with_config(func).map(|trial| {
