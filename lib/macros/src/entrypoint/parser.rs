@@ -129,7 +129,7 @@ impl syn::parse::Parse for ParsedEntrypointArgs {
 
 pub fn parse_entrypoint(
     input: syn::parse::ParseStream,
-) -> syn::Result<crate::entrypoint::SolanaBoomerangEntrypoint> {
+) -> syn::Result<crate::entrypoint::Entrypoint> {
     use {quote::ToTokens, syn::parse::Parse};
 
     let input = ParsedEntrypointArgs::parse(input)?;
@@ -160,7 +160,7 @@ pub fn parse_entrypoint(
         }
     }
 
-    Ok(crate::entrypoint::SolanaBoomerangEntrypoint::new(
+    Ok(crate::entrypoint::Entrypoint::new(
         programs,
         program_tests,
         integration_tests,

@@ -34,11 +34,11 @@ impl syn::parse::Parse for ParsedWarpSlotArg {
     }
 }
 
-enum ParsedTrialArg {
+enum ParsedTrialConfigArg {
     DeactivateFeatures(ParsedDeactivateFeaturesArg),
     WarpSlot(ParsedWarpSlotArg),
 }
-impl syn::parse::Parse for ParsedTrialArg {
+impl syn::parse::Parse for ParsedTrialConfigArg {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         if input.peek(syn::Ident) {
             let ident = input.parse::<syn::Ident>()?;
@@ -59,58 +59,44 @@ impl syn::parse::Parse for ParsedTrialArg {
     }
 }
 
-struct ParsedTrialArgs {
-    args: Vec<ParsedTrialArg>,
+struct ParsedTrialConfigArgs {
+    args: Vec<ParsedTrialConfigArg>,
 }
-impl syn::parse::Parse for ParsedTrialArgs {
+impl syn::parse::Parse for ParsedTrialConfigArgs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let args = input
-            .parse_terminated(ParsedTrialArg::parse, syn::Token![,])?
+            .parse_terminated(ParsedTrialConfigArg::parse, syn::Token![,])?
             .into_iter()
             .collect();
         Ok(Self { args })
     }
 }
 
-pub fn parse_trial(
+pub fn parse_trial_config(
     input: syn::parse::ParseStream,
-) -> syn::Result<crate::trial::SolanaBoomerangTrial> {
+) -> syn::Result<crate::iteration::trial::TrialConfig> {
     use {quote::ToTokens, syn::parse::Parse};
 
-    let input = ParsedTrialArgs::parse(input)?;
+    let input = ParsedTrialConfigArgs::parse(input)?;
 
     let mut deactivate_features: Vec<String> = Vec::new();
     let mut warp_slot: u64 = 0;
 
     for arg in input.args {
         match arg {
-            ParsedTrialArg::DeactivateFeatures(deactivate_features_arg) => {
+            ParsedTrialConfigArg::DeactivateFeatures(deactivate_features_arg) => {
                 deactivate_features_arg.value.iter().for_each(|arg| {
                     deactivate_features.push(arg.to_token_stream().to_string());
                 });
             }
-            ParsedTrialArg::WarpSlot(warp_slot_arg) => {
+            ParsedTrialConfigArg::WarpSlot(warp_slot_arg) => {
                 warp_slot = warp_slot_arg.value.base10_parse::<u64>().unwrap();
             }
         }
     }
 
-    Ok(crate::trial::SolanaBoomerangTrial {
+    Ok(crate::iteration::trial::TrialConfig {
         deactivate_features,
         warp_slot,
     })
-}
-
-pub fn _is_boomerang_test_attr(attr: &syn::Attribute) -> bool {
-    let path = &attr.path();
-    let segments: Vec<&syn::PathSegment> = path.segments.iter().collect();
-    if segments.len() != 2 {
-        return false;
-    }
-    if &segments[0].ident == "boomerang" && &segments[1].ident == "test" {
-        println!("Found boomerang::test attribute");
-        return true;
-    }
-    println!("Found non-boomerang::test attribute");
-    false
 }
