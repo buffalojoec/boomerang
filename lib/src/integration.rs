@@ -1,6 +1,6 @@
 use {
     crate::{
-        dirs,
+        dirs, output,
         program::{BoomerangProgramTest, BoomerangProgramTestIteration},
         validator_options::IntoTestValidatorStartOptions,
         BoomerangTests,
@@ -34,13 +34,15 @@ impl BoomerangIntegrationTest {
     }
 
     pub fn run(self) {
-        for iteration in self.iterations {
-            println!(
-                "Running integrations tests for {}",
-                iteration.program_file()
-            );
+        for (i, iteration) in self.iterations.into_iter().enumerate() {
+            output::starting_integration_tests(iteration.program_file());
 
-            for chunk in iteration.chunks() {
+            let chunks = iteration.chunks();
+            let num_chunks = chunks.len();
+
+            for chunk in chunks {
+                output::chunk(i + 1, num_chunks);
+
                 let test_validator = BoomerangTestValidator::new(
                     dirs::test_ledger_path(),
                     &self.solana_cli_alias,

@@ -1,12 +1,13 @@
 mod dirs;
 pub mod integration;
 pub mod migration;
+mod output;
 pub mod program;
 pub mod validator_options;
 
 use {
     client::BoomerangTestClientConfig, integration::BoomerangIntegrationTest, libtest_mimic::Trial,
-    program::BoomerangProgramTest,
+    migration::BoomerangMigrationTest, program::BoomerangProgramTest,
 };
 pub use {
     libtest_mimic, solana_boomerang_client as client, solana_boomerang_macros as boomerang,
@@ -57,7 +58,7 @@ pub async fn entrypoint(
     tests: BoomerangTests<'_>,
 ) {
     if program_tests.is_empty() && integration_tests.is_empty() && migration_tests.is_empty() {
-        println!("No tests to run");
+        output::no_tests_to_run();
         return;
     }
 
@@ -74,6 +75,13 @@ pub async fn entrypoint(
     }
 
     if !migration_tests.is_empty() {
-        // Run the migration tests
+        let migration_test_programs = migration_tests.iter().map(|(p, _)| *p).collect::<Vec<_>>();
+        let programs = select_test_programs(programs, &migration_test_programs);
+        let migration_tests = migration_tests
+            .iter()
+            .map(|(p, t)| (*p, *t, programs.iter().find(|(p, _)| p == p).unwrap().1))
+            .collect::<Vec<_>>();
+        let migration_test = BoomerangMigrationTest::new(&migration_tests, tests).await;
+        migration_test.run().await;
     }
 }

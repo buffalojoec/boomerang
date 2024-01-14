@@ -4,7 +4,7 @@ mod setup;
 
 use {
     crate::{
-        dirs, program::BoomerangProgramTestIteration,
+        dirs, output, program::BoomerangProgramTestIteration,
         validator_options::IntoTestValidatorStartOptions, BoomerangTests,
     },
     solana_boomerang_client::{BoomerangClient, BoomerangTestClient},
@@ -63,11 +63,7 @@ impl BoomerangMigrationTest {
             let (feature_keypair, feature_keypair_path) = setup::setup(&target_program);
             let feature_id = feature_keypair.pubkey().to_string();
 
-            println!(
-                "Running migration tests for {} replacing {}",
-                iteration.program_file(),
-                target_program,
-            );
+            output::starting_migration_tests(iteration.program_file(), &target_program);
 
             for chunk in iteration.chunks() {
                 let mut config = chunk.config().clone();

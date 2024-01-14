@@ -1,5 +1,5 @@
 use {
-    crate::{BoomerangTest, BoomerangTests},
+    crate::{output, BoomerangTest, BoomerangTests},
     libtest_mimic::{Arguments, Trial},
     solana_boomerang_client::BoomerangTestClientConfig,
     solana_sdk::pubkey::Pubkey,
@@ -139,7 +139,7 @@ impl BoomerangProgramTest {
     /// that particular trial, so we can run all trials in parallel.
     pub fn run(self) {
         for iteration in self.iterations {
-            println!("Running program tests for {}", iteration.program_file);
+            output::starting_program_tests(iteration.program_file());
             iteration.parallel_run();
         }
     }

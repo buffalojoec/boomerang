@@ -3587,6 +3587,7 @@ dependencies = [
  "solana-boomerang-macros",
  "solana-boomerang-test-validator",
  "solana-sdk",
+ "termcolor",
  "tokio",
 ]
 
@@ -4792,6 +4793,20 @@ dependencies = [
  "spl-discriminator",
  "spl-pod",
  "spl-program-error",
+ "spl-type-length-value",
+]
+
+[[package]]
+name = "spl-transfer-hook-example"
+version = "0.4.0"
+dependencies = [
+ "arrayref",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-tlv-account-resolution",
+ "spl-token-2022",
+ "spl-transfer-hook-interface",
  "spl-type-length-value",
 ]
 
