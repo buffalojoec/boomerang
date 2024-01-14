@@ -17,11 +17,9 @@ use {
 };
 
 pub struct BoomerangClient {
-    // I don't love this, btw.
     pub banks: Option<BoomerangBanksClient>,
     pub rpc: Option<BoomerangRpcClient>,
-    // Note: This field is possibly unused now.
-    pub use_banks: bool,
+    use_banks: bool,
 }
 impl BoomerangClient {
     pub async fn new(config: &BoomerangTestClientConfig, use_banks: bool) -> Self {
@@ -42,16 +40,6 @@ impl BoomerangClient {
 
 #[async_trait]
 impl BoomerangTestClient for BoomerangClient {
-    // This function is a no-op, for now.
-    // The config parameters for each need to be split out.
-    async fn setup(_config: &BoomerangTestClientConfig) -> Self {
-        BoomerangClient {
-            banks: None,
-            rpc: None,
-            use_banks: true,
-        }
-    }
-
     fn program_id(&self) -> Pubkey {
         if self.use_banks {
             self.banks.as_ref().unwrap().program_id()
@@ -62,7 +50,6 @@ impl BoomerangTestClient for BoomerangClient {
 
     fn fee_payer(&self) -> Keypair {
         if self.use_banks {
-            // Ahh (!!)
             self.banks.as_ref().unwrap().fee_payer()
         } else {
             self.rpc.as_ref().unwrap().fee_payer()

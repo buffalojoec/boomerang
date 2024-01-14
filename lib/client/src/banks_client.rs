@@ -17,9 +17,8 @@ pub struct BoomerangBanksClient {
     program_test_context: ProgramTestContext,
 }
 
-#[async_trait]
-impl BoomerangTestClient for BoomerangBanksClient {
-    async fn setup(config: &BoomerangTestClientConfig) -> Self {
+impl BoomerangBanksClient {
+    pub async fn setup(config: &BoomerangTestClientConfig) -> Self {
         let program_id = config.program_id;
 
         let mut program_test = ProgramTest::new(&config.program_file, config.program_id, None);
@@ -39,7 +38,10 @@ impl BoomerangTestClient for BoomerangBanksClient {
             program_test_context,
         }
     }
+}
 
+#[async_trait]
+impl BoomerangTestClient for BoomerangBanksClient {
     fn program_id(&self) -> Pubkey {
         self.program_id
     }

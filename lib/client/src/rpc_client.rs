@@ -20,9 +20,8 @@ pub struct BoomerangRpcClient {
     rpc_client: RpcClient,
 }
 
-#[async_trait]
-impl BoomerangTestClient for BoomerangRpcClient {
-    async fn setup(config: &BoomerangTestClientConfig) -> Self {
+impl BoomerangRpcClient {
+    pub async fn setup(config: &BoomerangTestClientConfig) -> Self {
         let fee_payer = Keypair::new();
         let program_id = config.program_id;
 
@@ -45,7 +44,10 @@ impl BoomerangTestClient for BoomerangRpcClient {
             rpc_client,
         }
     }
+}
 
+#[async_trait]
+impl BoomerangTestClient for BoomerangRpcClient {
     fn program_id(&self) -> Pubkey {
         self.program_id
     }

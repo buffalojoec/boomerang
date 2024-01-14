@@ -31,22 +31,13 @@ pub async fn test_create_lookup_table_idempotent(mut client: BoomerangClient) {
     let authority_address = Pubkey::new_unique();
     let payer_pubkey = client.fee_payer().pubkey();
 
-    let (mut create_lookup_table_ix, lookup_table_address) =
+    let (create_lookup_table_ix, lookup_table_address) =
         create_lookup_table(authority_address, payer_pubkey, 123);
-
-    // TODO: Hot-swapping the program ID at test runtime is necessary when
-    // testing a program that gets deployed during genesis on the test
-    // validator, such as a native program or an SPL Token program.
-    // The test validator startup options for adding programs at genesis
-    // will not overwrite the program account(s) at the existing address.
-    // In order to eliminate this hot-swapping, we have to figure out a way
-    // to load the program being tested at the proper address on test validator
-    // startup.
-    create_lookup_table_ix.program_id = client.program_id();
 
     // First create should succeed
     {
-        let transaction = client.create_default_transaction(&[create_lookup_table_ix.clone()], &[]);
+        let transaction =
+            client.create_default_transaction(&mut [create_lookup_table_ix.clone()], &[]);
         client
             .expect_successful_transaction(transaction)
             .await
@@ -72,7 +63,7 @@ pub async fn test_create_lookup_table_idempotent(mut client: BoomerangClient) {
     // Second create should succeed too
     {
         let transaction = client
-            .create_default_transaction_with_new_blockhash(&[create_lookup_table_ix], &[])
+            .create_default_transaction_with_new_blockhash(&mut [create_lookup_table_ix], &[])
             .await;
         client
             .expect_successful_transaction(transaction)
@@ -92,21 +83,11 @@ pub async fn test_create_lookup_table_not_idempotent(mut client: BoomerangClient
     let authority_keypair = Keypair::new();
     let authority_address = authority_keypair.pubkey();
 
-    let (mut create_lookup_table_ix, ..) =
+    let (create_lookup_table_ix, ..) =
         create_lookup_table_signed(authority_address, payer_pubkey, 123);
 
-    // TODO: Hot-swapping the program ID at test runtime is necessary when
-    // testing a program that gets deployed during genesis on the test
-    // validator, such as a native program or an SPL Token program.
-    // The test validator startup options for adding programs at genesis
-    // will not overwrite the program account(s) at the existing address.
-    // In order to eliminate this hot-swapping, we have to figure out a way
-    // to load the program being tested at the proper address on test validator
-    // startup.
-    create_lookup_table_ix.program_id = client.program_id();
-
-    let transaction =
-        client.create_default_transaction(&[create_lookup_table_ix.clone()], &[&authority_keypair]);
+    let transaction = client
+        .create_default_transaction(&mut [create_lookup_table_ix.clone()], &[&authority_keypair]);
     client
         .expect_successful_transaction(transaction)
         .await
@@ -116,7 +97,7 @@ pub async fn test_create_lookup_table_not_idempotent(mut client: BoomerangClient
     {
         let transaction = client
             .create_default_transaction_with_new_blockhash(
-                &[create_lookup_table_ix],
+                &mut [create_lookup_table_ix],
                 &[&authority_keypair],
             )
             .await;
@@ -135,20 +116,10 @@ pub async fn test_create_lookup_table_use_payer_as_authority(mut client: Boomera
     let payer_pubkey = client.fee_payer().pubkey();
     let authority_address = payer_pubkey;
 
-    let (mut create_lookup_table_ix, ..) =
+    let (create_lookup_table_ix, ..) =
         create_lookup_table_signed(authority_address, payer_pubkey, 123);
 
-    // TODO: Hot-swapping the program ID at test runtime is necessary when
-    // testing a program that gets deployed during genesis on the test
-    // validator, such as a native program or an SPL Token program.
-    // The test validator startup options for adding programs at genesis
-    // will not overwrite the program account(s) at the existing address.
-    // In order to eliminate this hot-swapping, we have to figure out a way
-    // to load the program being tested at the proper address on test validator
-    // startup.
-    create_lookup_table_ix.program_id = client.program_id();
-
-    let transaction = client.create_default_transaction(&[create_lookup_table_ix.clone()], &[]);
+    let transaction = client.create_default_transaction(&mut [create_lookup_table_ix.clone()], &[]);
     client
         .expect_successful_transaction(transaction)
         .await
@@ -171,18 +142,8 @@ pub async fn test_create_lookup_table_missing_signer(mut client: BoomerangClient
     .0;
     ix.accounts[1].is_signer = false;
 
-    // TODO: Hot-swapping the program ID at test runtime is necessary when
-    // testing a program that gets deployed during genesis on the test
-    // validator, such as a native program or an SPL Token program.
-    // The test validator startup options for adding programs at genesis
-    // will not overwrite the program account(s) at the existing address.
-    // In order to eliminate this hot-swapping, we have to figure out a way
-    // to load the program being tested at the proper address on test validator
-    // startup.
-    ix.program_id = client.program_id();
-
     let tx = client
-        .create_default_transaction_with_new_blockhash(&[ix], &[])
+        .create_default_transaction_with_new_blockhash(&mut [ix], &[])
         .await;
     client
         .expect_failed_transaction_instruction(tx, 0, InstructionError::MissingRequiredSignature)
@@ -194,20 +155,10 @@ pub async fn test_create_lookup_table_not_recent_slot(mut client: BoomerangClien
     let payer = client.fee_payer();
     let authority_address = Pubkey::new_unique();
 
-    let mut ix = create_lookup_table(authority_address, payer.pubkey(), Slot::MAX).0;
-
-    // TODO: Hot-swapping the program ID at test runtime is necessary when
-    // testing a program that gets deployed during genesis on the test
-    // validator, such as a native program or an SPL Token program.
-    // The test validator startup options for adding programs at genesis
-    // will not overwrite the program account(s) at the existing address.
-    // In order to eliminate this hot-swapping, we have to figure out a way
-    // to load the program being tested at the proper address on test validator
-    // startup.
-    ix.program_id = client.program_id();
+    let ix = create_lookup_table(authority_address, payer.pubkey(), Slot::MAX).0;
 
     let tx = client
-        .create_default_transaction_with_new_blockhash(&[ix], &[])
+        .create_default_transaction_with_new_blockhash(&mut [ix], &[])
         .await;
     client
         .expect_failed_transaction_instruction(tx, 0, InstructionError::InvalidInstructionData)
@@ -222,18 +173,8 @@ pub async fn test_create_lookup_table_pda_mismatch(mut client: BoomerangClient) 
     let mut ix = create_lookup_table(authority_address, payer.pubkey(), 123).0;
     ix.accounts[0].pubkey = Pubkey::new_unique();
 
-    // TODO: Hot-swapping the program ID at test runtime is necessary when
-    // testing a program that gets deployed during genesis on the test
-    // validator, such as a native program or an SPL Token program.
-    // The test validator startup options for adding programs at genesis
-    // will not overwrite the program account(s) at the existing address.
-    // In order to eliminate this hot-swapping, we have to figure out a way
-    // to load the program being tested at the proper address on test validator
-    // startup.
-    ix.program_id = client.program_id();
-
     let tx = client
-        .create_default_transaction_with_new_blockhash(&[ix], &[])
+        .create_default_transaction_with_new_blockhash(&mut [ix], &[])
         .await;
     client
         .expect_failed_transaction_instruction(tx, 0, InstructionError::InvalidArgument)

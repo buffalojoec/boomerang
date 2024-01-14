@@ -40,9 +40,6 @@ impl Default for BoomerangTestClientConfig {
 /// A client for testing programs
 #[async_trait]
 pub trait BoomerangTestClient {
-    /// Create a new client
-    async fn setup(config: &BoomerangTestClientConfig) -> Self;
-
     /// Get the program ID
     fn program_id(&self) -> Pubkey;
 
@@ -81,11 +78,22 @@ pub trait BoomerangTestClient {
     /// signers, and recent blockhash
     fn create_transaction(
         &self,
-        instructions: &[Instruction],
+        instructions: &mut [Instruction],
         fee_payer: &Keypair,
         signers: &[&Keypair],
         recent_blockhash: Hash,
     ) -> Transaction {
+        // TODO: Hot-swapping the program ID at test runtime is necessary when
+        // testing a program that gets deployed during genesis on the test
+        // validator, such as a native program or an SPL Token program.
+        // The test validator startup options for adding programs at genesis
+        // will not overwrite the program account(s) at the existing address.
+        // In order to eliminate this hot-swapping, we have to figure out a way
+        // to load the program being tested at the proper address on test validator
+        // startup.
+        instructions.iter_mut().for_each(|ix| {
+            ix.program_id = self.program_id();
+        });
         Transaction::new_signed_with_payer(
             instructions,
             Some(&fee_payer.pubkey()),
@@ -97,9 +105,20 @@ pub trait BoomerangTestClient {
     /// Create a default transaction with the fee payer as the payer
     fn create_default_transaction(
         &self,
-        instructions: &[Instruction],
+        instructions: &mut [Instruction],
         additional_signers: &[&Keypair],
     ) -> Transaction {
+        // TODO: Hot-swapping the program ID at test runtime is necessary when
+        // testing a program that gets deployed during genesis on the test
+        // validator, such as a native program or an SPL Token program.
+        // The test validator startup options for adding programs at genesis
+        // will not overwrite the program account(s) at the existing address.
+        // In order to eliminate this hot-swapping, we have to figure out a way
+        // to load the program being tested at the proper address on test validator
+        // startup.
+        instructions.iter_mut().for_each(|ix| {
+            ix.program_id = self.program_id();
+        });
         let fee_payer = self.fee_payer();
         let recent_blockhash = self.last_blockhash();
         let mut signers = vec![&fee_payer];
@@ -110,9 +129,20 @@ pub trait BoomerangTestClient {
     /// Create a default transaction with a new latest blockhash
     async fn create_default_transaction_with_new_blockhash(
         &mut self,
-        instructions: &[Instruction],
+        instructions: &mut [Instruction],
         additional_signers: &[&Keypair],
     ) -> Transaction {
+        // TODO: Hot-swapping the program ID at test runtime is necessary when
+        // testing a program that gets deployed during genesis on the test
+        // validator, such as a native program or an SPL Token program.
+        // The test validator startup options for adding programs at genesis
+        // will not overwrite the program account(s) at the existing address.
+        // In order to eliminate this hot-swapping, we have to figure out a way
+        // to load the program being tested at the proper address on test validator
+        // startup.
+        instructions.iter_mut().for_each(|ix| {
+            ix.program_id = self.program_id();
+        });
         let fee_payer = self.fee_payer();
         let recent_blockhash = self.new_latest_blockhash().await;
         let mut signers = vec![&fee_payer];
